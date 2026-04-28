@@ -1,198 +1,371 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Track 3 Setup — AI &amp; VR — COGS 160</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Track 3 Setup · COGS 160</title>
+  <link rel="stylesheet" href="../ka_atlas_shell.css">
+  <link rel="stylesheet" href="track3_weeks.css">
   <style>
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-    :root{--navy:#1C3D3A;--amber:#E8872A;--cream:#F7F4EF;--green:#2A7868;--text:#2D2010;--muted:#6A5E50;--border:#DDD6CD;--light:#EDE8E0;}
-    body{font-family:Arial,sans-serif;background:var(--cream);color:var(--text);line-height:1.65;}
-    nav{position:sticky;top:0;z-index:500;background:var(--navy);display:flex;align-items:center;gap:24px;padding:0 28px;min-height:52px;border-bottom:2px solid var(--amber);}
-    .nav-center{display:flex;align-items:center;gap:14px;flex:1;}
-    nav a.nav-link{color:#7AACA0;font-size:0.8rem;text-decoration:none;padding:6px 10px;border-radius:6px;}
-    nav a.nav-link:hover{color:#fff;background:rgba(255,255,255,0.08);}
-    nav a.nav-link.active{color:#F5A623;background:rgba(232,135,42,0.12);}
-    .nav-right{display:flex;align-items:center;gap:12px;}
-    .page-hero{background:linear-gradient(135deg,var(--navy) 0%,#163230 100%);padding:48px 40px 40px;border-bottom:3px solid var(--amber);}
-    .page-hero .eyebrow{font-size:0.65rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#7AACA0;margin-bottom:10px;}
-    .page-hero h1{font-family:Georgia,serif;font-size:1.9rem;font-weight:400;color:#F5F0E8;line-height:1.25;margin-bottom:12px;}
-    .page-hero p{font-size:1rem;color:#A8C8BF;line-height:1.65;max-width:720px;}
-    .outer{max-width:920px;margin:0 auto;padding:0 32px 72px;}
-    .content-section{margin-top:44px;}
-    .section-title{font-family:Georgia,serif;font-size:1.35rem;font-weight:400;color:var(--navy);margin-bottom:18px;line-height:1.3;}
-    p{margin-bottom:14px;font-size:0.95rem;line-height:1.7;}
-    ul,ol{margin-left:1.5rem;margin-bottom:14px;}
-    li{margin-bottom:8px;}
-    strong{color:var(--text);}
-    code{background:#f1ece4;padding:1px 5px;border-radius:3px;font-family:Menlo,Consolas,monospace;font-size:0.88em;color:#5A3F1A;}
-    pre{background:#1C3D3A;color:#E8DFCF;padding:14px 16px;border-radius:8px;overflow-x:auto;font-family:Menlo,Consolas,monospace;font-size:0.85rem;line-height:1.55;margin:12px 0 18px;}
-    .callout{border-radius:8px;padding:16px 18px;margin:18px 0;font-size:0.92rem;line-height:1.65;}
-    .callout-info{background:#E6F5F0;border-left:4px solid var(--green);color:#1a4a3f;}
-    .callout-warn{background:#FFF3DD;border-left:4px solid var(--amber);color:#6a4614;}
-    .step-num{display:inline-block;width:28px;height:28px;background:var(--amber);color:#fff;border-radius:50%;text-align:center;font-weight:700;font-size:0.9rem;line-height:28px;margin-right:8px;vertical-align:middle;}
-    .step-head{font-family:Georgia,serif;font-size:1.1rem;color:var(--navy);margin:26px 0 10px;display:flex;align-items:center;}
-    .cta-button{display:inline-block;padding:11px 22px;background:var(--navy);color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:0.92rem;margin-top:10px;}
-    .cta-button.secondary{background:transparent;color:var(--navy);border:1.5px solid var(--navy);}
-    .track-nav{display:flex;justify-content:space-between;align-items:center;margin-top:48px;padding-top:24px;border-top:2px solid var(--border);}
-  
-    /* Offset anchor jumps so section titles clear the fixed class navbar */
-    :target { scroll-margin-top: 96px; }
-    h1[id], h2[id], h3[id], h4[id], section[id], div[id] { scroll-margin-top: 96px; }
+    .setup-banner {
+      background: #fff7e9;
+      border: 1.5px solid #efc88e;
+      border-left: 5px solid #e8872a;
+      border-radius: 12px;
+      padding: 16px 18px;
+      margin-bottom: 18px;
+    }
+    .setup-banner strong { color: #8a4c0f; }
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .status-card {
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .status-card h3 {
+      margin: 0 0 8px;
+      font: 700 1rem Georgia, serif;
+      color: var(--navy);
+    }
+    .status-card p { margin: 0; }
+    .step-block {
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+    .step-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      font: 700 1.06rem Georgia, serif;
+      color: var(--navy);
+    }
+    .step-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--amber);
+      color: #fff;
+      font: 700 0.92rem Arial, sans-serif;
+      flex: 0 0 auto;
+    }
+    .source-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .source-card {
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .source-card h3 {
+      margin: 0 0 8px;
+      font: 700 1rem Georgia, serif;
+      color: var(--navy);
+    }
+    .source-card p { margin: 0; }
+    .code-lite {
+      background: #1c3d3a;
+      color: #e8dfcf;
+      border-radius: 10px;
+      padding: 14px 16px;
+      overflow-x: auto;
+      font: 0.86rem Menlo, Consolas, monospace;
+      line-height: 1.55;
+      margin: 12px 0 0;
+    }
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .cta-row a {
+      display: inline-block;
+      padding: 10px 16px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .cta-main {
+      background: var(--amber);
+      color: #fff;
+    }
+    .cta-secondary {
+      background: #fff;
+      color: var(--navy);
+      border: 1.5px solid var(--border);
+    }
+    .callout-plain {
+      background: #eef6f3;
+      border-left: 4px solid var(--teal);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-top: 12px;
+    }
+    .callout-warn {
+      background: #fff3e0;
+      border-left: 4px solid var(--amber);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-top: 12px;
+    }
   </style>
 </head>
-<body>
+<body data-ka-active=""
+      data-ka-crumbs='[["Home","../ka_home.html"],["COGS 160","ka_schedule.html"],["Track 3","ka_track3_hub.html"],["Setup",""]]' data-ka-regime="160sp">
+  <div id="ka-navbar-slot"></div>
+  <div id="ka-breadcrumb-slot"></div>
+  <div class="breadcrumb-fallback"><div class="inner">Home / COGS 160 / Track 3 / Setup</div></div>
 
-<nav>
-  <a href="ka_schedule.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;">
-    <svg viewBox="0 0 32 32" fill="none" style="width:28px;height:28px;">
-      <circle cx="16" cy="16" r="3.5" fill="#F5A623"/>
-      <circle cx="16" cy="5" r="2.5" fill="#A8C8BF"/>
-      <circle cx="27" cy="22" r="2.5" fill="#A8C8BF"/>
-      <circle cx="5" cy="22" r="2.5" fill="#A8C8BF"/>
-      <line x1="16" y1="7.5" x2="16" y2="12.5" stroke="#F5A623" stroke-width="1.5"/>
-      <line x1="24.8" y1="20.2" x2="19.0" y2="17.3" stroke="#F5A623" stroke-width="1.5"/>
-      <line x1="7.2" y1="20.2" x2="13.0" y2="17.3" stroke="#F5A623" stroke-width="1.5"/>
-    </svg>
-    <div style="display:flex;flex-direction:column;line-height:1.1;">
-      <span style="font-size:0.66rem;font-weight:400;letter-spacing:0.24em;text-transform:uppercase;color:#A8C8BF;">Knowledge</span>
-      <span style="font-size:1.05rem;font-weight:700;color:#fff;">At<span style="color:#F5A623;">las</span> · <span style="font-size:0.85rem;color:#A8C8BF;font-weight:400;">COGS 160</span></span>
+  <header class="hero">
+    <div class="hero-inner">
+      <div class="eyebrow">COGS 160 · Track 3</div>
+      <h1>Track 3 Setup</h1>
+      <p>Install Blender, assemble a small room corpus, and prepare a browser-first workflow. The official course path is Blender for asset work plus A-Frame / WebXR for final scenes.</p>
     </div>
-  </a>
-  <div class="nav-center">
-    <a href="ka_schedule.html" class="nav-link">160 Syllabus</a>
-    <a href="week2_exercises.html" class="nav-link">A0</a>
-    <a href="week3_agenda.html" class="nav-link">A1</a>
-    <a href="ka_track1_tagging.html" class="nav-link">Track 1</a>
-    <a href="ka_track2_pipeline.html" class="nav-link">Track 2</a>
-    <a href="ka_track3_vr.html" class="nav-link active">Track 3</a>
-    <a href="ka_track4_ux.html" class="nav-link">Track 4</a>
+  </header>
+
+  <div class="page-shell">
+    <aside class="subnav" aria-label="Track 3 setup navigation">
+      <div class="subnav-head">
+        <div class="kicker">Track 3</div>
+        <h2>Setup path</h2>
+        <div class="muted">One baseline, one sequence</div>
+      </div>
+      <ul class="subnav-list">
+        <li><a href="ka_track3_today.html">Today</a></li>
+        <li><a class="active" href="ka_track3_setup.html">Setup Guide</a></li>
+        <li><a href="track3_week_1.html">Week 1</a></li>
+        <li><a href="ka_track3_resources.html">Resources</a></li>
+        <li><a href="ka_vr_assignment.html">Workbook</a></li>
+        <li class="subnav-divider"></li>
+        <li><a href="ka_track3_hub.html">Weekly Roadmap</a></li>
+        <li><a href="ka_track3_team_hub.html">Team Hub</a></li>
+      </ul>
+    </aside>
+
+    <main id="ka-main">
+      <section class="section">
+        <h2>Official Track 3 Contract</h2>
+        <div class="setup-banner">
+          <strong>Use this rule:</strong> Track 3 students may inspect and edit assets in Blender, but the final course submission path is a browser-runnable A-Frame / WebXR scene. Unity and Unreal are optional prototype environments, not the required student baseline.
+        </div>
+        <div class="status-grid">
+          <div class="status-card">
+            <h3>Primary tools</h3>
+            <p>Blender for asset inspection and cleanup. A-Frame for the eventual submitted scene. Git and a browser for review and sharing.</p>
+          </div>
+          <div class="status-card">
+            <h3>Not required now</h3>
+            <p>No Unreal starter repo, no headset pairing, and no large game-engine install just to begin the course.</p>
+          </div>
+          <div class="status-card">
+            <h3>First real goal</h3>
+            <p>Build a strong benchmark room shortlist and prove that the rooms can support controlled architectural edits.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Why The Course Uses A-Frame</h2>
+        <div class="cards">
+          <article class="card">
+            <h3>Advantages</h3>
+            <p>A-Frame scenes run in the browser, are easy to inspect, easy to submit through Git, and much easier for TAs and future students to review than a heavy engine project.</p>
+          </article>
+          <article class="card">
+            <h3>Limitations</h3>
+            <p>A-Frame is not the best path for maximal photorealism, dense physics, or the most ambitious headset-specific interaction design. Those are real limits.</p>
+          </article>
+          <article class="card">
+            <h3>Course judgment</h3>
+            <p>For this class, shareability, experimental clarity, and reviewability matter more than maximal rendering power. That is why Blender plus A-Frame is the official submission path.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Prerequisites</h2>
+        <ul class="tight">
+          <li>A laptop that can run Blender 4.x reasonably well. A dedicated GPU helps, but many current laptops are adequate for the early weeks.</li>
+          <li>Python 3.11+ and Git installed.</li>
+          <li>Chrome or Firefox for browser scene review.</li>
+          <li>About 10 GB of free disk for downloaded room models, exports, and working files.</li>
+          <li>Optional: a Meshy or Tripo account for generating isolated props or exploratory room candidates.</li>
+        </ul>
+        <div class="callout-plain">
+          <strong>If you are choosing between tools:</strong> install Blender first, not a game engine. Blender is needed immediately; Unreal and Unity are not.
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Step-By-Step</h2>
+
+        <article class="step-block">
+          <div class="step-head"><span class="step-num">1</span>Install Blender</div>
+          <p>Download Blender 4.x from <a href="https://www.blender.org/download/">blender.org</a>, install it, and confirm that it opens. You do not need mastery at once; you need enough fluency to import a model, navigate the viewport, inspect hierarchy, and read object dimensions.</p>
+        </article>
+
+        <article class="step-block">
+          <div class="step-head"><span class="step-num">2</span>Verify Git, Python, and your browser workflow</div>
+          <p>Track 3 work still lives in a normal repo workflow. Confirm that Git and Python are available and that you can run a small local server when you need browser-based scene checks later.</p>
+          <div class="code-lite">python3 --version
+git --version</div>
+        </article>
+
+        <article class="step-block">
+          <div class="step-head"><span class="step-num">3</span>Clone the course site and run it locally</div>
+          <p>You need local access to the Track 3 pages, workbook, and shared resources.</p>
+          <div class="code-lite">git clone https://github.com/dkirsh/Knowledge_Atlas.git
+cd Knowledge_Atlas
+python3 -m http.server 8000</div>
+          <p>Then open <code>http://localhost:8000/160sp/ka_track3_today.html</code> or <code>http://localhost:8000/160sp/ka_track3_hub.html</code>.</p>
+        </article>
+
+        <article class="step-block">
+          <div class="step-head"><span class="step-num">4</span>Download 3 to 4 candidate room models</div>
+          <p>Your first academic task is not to build a flashy scene. It is to find room models that can support controlled architectural transformations without collapsing into unusable geometry.</p>
+          <div class="source-grid">
+            <div class="source-card">
+              <h3><a href="https://sketchfab.com/">Sketchfab</a></h3>
+              <p>Best general source for downloadable interiors and room models. Prefer <code>.glb</code> when available.</p>
+            </div>
+            <div class="source-card">
+              <h3><a href="https://www.turbosquid.com/Search/3D-Models/free/room">TurboSquid</a></h3>
+              <p>Useful when the hierarchy is clean enough to inspect and edit. Good for more professional room shells.</p>
+            </div>
+            <div class="source-card">
+              <h3><a href="https://polyhaven.com/">Poly Haven</a></h3>
+              <p>Excellent for HDRIs, textures, and some interior assets. Useful even when the room shell comes from somewhere else.</p>
+            </div>
+            <div class="source-card">
+              <h3>Meshy / Tripo</h3>
+              <p>Use these for isolated props or exploratory room candidates, not as the only source for the benchmark corpus.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="step-block">
+          <div class="step-head"><span class="step-num">5</span>Import one room into Blender and inspect it</div>
+          <p>For each candidate room, check the properties that matter for later transformation work.</p>
+          <ul class="tight">
+            <li>Scale: does a door look like a door rather than a tower?</li>
+            <li>Hierarchy: are walls, floors, ceilings, windows, and openings inspectable, or fused into one useless mesh?</li>
+            <li>Materials: can you identify and change meaningful material groups?</li>
+            <li>Openings: are windows and doors real openings or just texture illusions?</li>
+            <li>Editability: can you imagine changing ceiling height, wall curvature, enclosure, light, or materials without breaking everything else?</li>
+          </ul>
+        </article>
+
+        <article class="step-block">
+          <div class="step-head"><span class="step-num">6</span>Create a simple working folder structure</div>
+          <p>You do not need a large engine project. You need a clean workspace that maps to the weekly deliverables.</p>
+          <div class="code-lite">mkdir -p track3_workspace/{benchmark_rooms,generated_assets,variants,logs}
+cd track3_workspace</div>
+        </article>
+
+        <article class="step-block">
+          <div class="step-head"><span class="step-num">7</span>Read the student pages in the right order</div>
+          <p>Use this sequence:</p>
+          <ol class="tight">
+            <li><a href="ka_track3_today.html">Track 3 Today</a> for the immediate task list.</li>
+            <li><a href="track3_week_1.html">Week 1</a> for the first deliverables and evidence standards.</li>
+            <li><a href="ka_vr_assignment.html">Workbook</a> for the long-range contract and the final scene path.</li>
+          </ol>
+        </article>
+      </section>
+
+      <section class="section">
+        <h2>What Makes A Good Benchmark Room</h2>
+        <div class="cards">
+          <article class="card">
+            <h3>Geometrically plausible</h3>
+            <p>The room has realistic scale and obvious architectural structure. You can tell what is wall, floor, ceiling, window, and opening.</p>
+          </article>
+          <article class="card">
+            <h3>Transformable</h3>
+            <p>The room supports controlled edits to one factor at a time, rather than requiring a total rebuild for every change.</p>
+          </article>
+          <article class="card">
+            <h3>Portable</h3>
+            <p>The asset can be opened and reused outside one fragile engine path. Portable formats make the studio more robust and the handoffs cleaner.</p>
+          </article>
+        </div>
+        <div class="callout-plain">
+          <strong>A beautiful render is not enough.</strong> If the room is one fused mesh with no meaningful hierarchy, it is a poor benchmark regardless of how impressive it looks.
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>How To Use AI During Setup</h2>
+        <div class="two-col">
+          <div class="card">
+            <h3>Useful AI requests</h3>
+            <ul class="tight">
+              <li>Ask for concise explanations of scene hierarchy, pivots, materials, UVs, and export formats.</li>
+              <li>Ask for a checklist to judge whether a room asset is editable.</li>
+              <li>Ask for failure modes to watch when importing meshes into Blender or the browser.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Bad AI habits</h3>
+            <ul class="tight">
+              <li>Do not ask AI to decide whether a room is good without inspecting the asset yourself.</li>
+              <li>Do not let AI push you into a heavy toolchain just because it sounds powerful.</li>
+              <li>Do not confuse plausible language with verified geometry or a working scene.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Common Snags</h2>
+        <ul class="tight">
+          <li>Blender opens to an empty or confusing view: use <code>Home</code> to frame the scene or <code>Numpad .</code> to focus on the selected object.</li>
+          <li>The model is tiny or enormous: inspect object dimensions and correct scale before judging the room.</li>
+          <li>Textures are missing: many downloads place textures in a sibling folder rather than embedding them in the mesh.</li>
+          <li>Meshes from text-to-3D systems are chaotic: use them sparingly and expect cleanup before any serious evaluation.</li>
+          <li>Browser assets fail to load later: do not open scene files directly from the filesystem; use a small local web server.</li>
+        </ul>
+        <div class="callout-warn">
+          <strong>Raise your standard:</strong> if another student cannot open the asset, inspect it, and understand your notes, the artifact is not yet ready for the shared corpus.
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Optional Later Prototypes</h2>
+        <p>Unity and Unreal are still intellectually relevant. If a student later wants to prototype a headset-specific extension, that can be sensible. But the baseline course path should remain lighter and clearer:</p>
+        <ol class="tight">
+          <li>benchmark rooms first,</li>
+          <li>controlled transformations next,</li>
+          <li>one browser-runnable research scene after that.</li>
+        </ol>
+        <p class="muted">That order is not arbitrary. It is what makes the studio academically coherent and actually doable in the time available.</p>
+        <div class="cta-row">
+          <a class="cta-main" href="ka_track3_today.html">Open Today</a>
+          <a class="cta-secondary" href="track3_week_1.html">Open Week 1</a>
+          <a class="cta-secondary" href="ka_vr_assignment.html">Open Workbook</a>
+        </div>
+      </section>
+    </main>
   </div>
-  <div class="nav-right">
-    <a href="ka_student_profile.html" class="nav-link">160 Student Profile</a>
-  </div>
-</nav>
 
-<div class="page-hero">
-  <div class="eyebrow">COGS 160 · Track 3 · How to Set Up</div>
-  <h1>Track 3 Setup — AI &amp; VR Room Builder</h1>
-  <p>Install Unreal Engine 5, the class's room-template starter project, and the AI room-modification
-  harness. This is the heaviest setup of the four tracks — plan for an hour on a fast machine, longer
-  if Unreal needs to compile shaders.</p>
-</div>
-
-<div class="outer">
-
-  <div class="content-section">
-    <h2 class="section-title">Prerequisites</h2>
-    <ul>
-      <li><strong>Windows 10/11 or macOS 13+</strong>. Linux is technically supported but unsupported for
-      the class. Ask a TA if you need a loaner machine.</li>
-      <li><strong>Discrete GPU</strong> with at least 6 GB VRAM (RTX 2060 / M1 Pro / equivalent). Intel
-      integrated graphics will not render the template scenes at an interactive frame rate.</li>
-      <li><strong>80 GB free disk.</strong> Unreal plus the starter content is large.</li>
-      <li><strong>Epic Games account</strong> — free; sign up at
-        <a href="https://www.epicgames.com/account/" style="color:var(--amber);font-weight:600;">epicgames.com</a>.</li>
-      <li><strong>Python 3.11+, Git</strong> as in the other tracks.</li>
-      <li><strong>Quest 2/3, Valve Index, or equivalent headset</strong> if you are on the VR-authoring
-      sub-team. Not required for the AI-harness sub-team.</li>
-      <li><strong>Blender 4.x</strong> (free) — used as a neutral staging ground for meshes that come
-      out of text-to-3D services before they are imported into Unreal. Download from
-      <a href="https://www.blender.org/download/" style="color:var(--amber);font-weight:600;">blender.org</a>.
-      Choose the LTS build if you prefer stability over the newest features.</li>
-      <li><strong>A text-to-3D account</strong> — either <a href="https://www.meshy.ai/"
-        style="color:var(--amber);font-weight:600;">Meshy</a> or
-        <a href="https://www.tripo3d.ai/" style="color:var(--amber);font-weight:600;">Tripo3D</a>.
-        Both services take a prompt (or an image) and return a textured mesh in a few minutes. Free
-        tiers are enough for classwork; pick one and stay with it so your asset provenance is consistent.</li>
-    </ul>
-  </div>
-
-  <div class="content-section">
-    <h2 class="section-title">Step-by-Step</h2>
-
-    <div class="step-head"><span class="step-num">1</span>Install Epic Games Launcher &amp; Unreal Engine 5.4</div>
-    <p>Download the Epic Games Launcher, sign in, and install Unreal Engine 5.4 from the "Unreal Engine"
-    tab. Accept the default components; the install is 30–50 GB.</p>
-
-    <div class="step-head"><span class="step-num">2</span>Clone the KA-Rooms starter project</div>
-    <pre>git clone git@github.com:kirsh-lab/KA-Rooms.git
-cd KA-Rooms
-git lfs pull   # pulls the base-room .uasset files</pre>
-    <div class="callout callout-info">
-      <strong>Git LFS</strong> is required — install once with <code>brew install git-lfs</code> (macOS)
-      or from <a href="https://git-lfs.com" style="color:#1a4a3f;font-weight:600;">git-lfs.com</a> on Windows,
-      then run <code>git lfs install</code>.
-    </div>
-
-    <div class="step-head"><span class="step-num">3</span>Open the project and let Unreal compile shaders</div>
-    <p>Double-click <code>KA_Rooms.uproject</code>. The first open triggers a shader compile that can
-    take 15–40 minutes. Let it finish before touching anything.</p>
-
-    <div class="step-head"><span class="step-num">4</span>Install the AI room-modification harness</div>
-    <pre>cd ai_harness
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env
-# Edit .env: ANTHROPIC_API_KEY=...</pre>
-
-    <div class="step-head"><span class="step-num">5</span>Run the harness against a base room</div>
-    <pre>python -m ka_rooms.ai_harness \
-    --room living_room_v1 \
-    --instruction "raise the ceiling to 3.6 m and curve the back wall"</pre>
-    <p>The harness writes a modified <code>.uasset</code> into <code>KA-Rooms/Content/Generated/</code>;
-    reload the Unreal editor to see the result.</p>
-
-    <div class="step-head"><span class="step-num">6</span>Set up your asset-generation pipeline</div>
-    <p>Most of the Week 3–5 rooms will need one or two custom props that the Unreal Marketplace does not
-    cover (a particular chair shape, a specific artefact on a shelf, a culturally distinctive light
-    fixture). The class uses a three-step pipeline:</p>
-    <ol>
-      <li><strong>Generate</strong> a textured mesh in Meshy or Tripo3D from a short prompt ("a round
-      wooden side-table, 45 cm tall, mid-century style") or a reference image. Export as
-      <code>.glb</code> or <code>.fbx</code>.</li>
-      <li><strong>Clean up</strong> in Blender: check scale against a reference cube, delete stray
-      geometry, consolidate materials, and bake down texture atlases if the mesh arrived with several
-      overlapping UV islands. Re-export as <code>.fbx</code>.</li>
-      <li><strong>Import</strong> into Unreal through the <em>Content Drawer → Import</em> button and
-      drop into <code>Content/Generated/props/</code>. Check collision and lightmap UVs before
-      saving.</li>
-    </ol>
-    <div class="callout callout-info">
-      <strong>Why Blender sits in the middle.</strong> Meshes that come out of text-to-3D services
-      are rarely clean enough to import straight into Unreal — scales are off by a factor of ten, UV
-      seams are visible, and materials are sometimes duplicated. Blender is the neutral editor where
-      you correct these issues once, so the Unreal import is predictable. Skipping this step is the
-      most common reason a generated prop looks "wrong" in the headset.
-    </div>
-
-    <div class="step-head"><span class="step-num">7</span>(VR sub-team only) Pair your headset</div>
-    <p>Quest users: install <em>Meta Quest Link</em>, enable developer mode on the headset, and follow
-    Epic's <em>VR preview</em> quick-start. Index users: use SteamVR with OpenXR runtime set to SteamVR.</p>
-  </div>
-
-  <div class="content-section">
-    <h2 class="section-title">Common Snags</h2>
-    <ul>
-      <li><strong>Unreal crashes on first open</strong> — usually GPU driver. Update to the latest NVIDIA
-      or AMD drivers and retry.</li>
-      <li><strong>LFS files missing</strong> — re-run <code>git lfs install</code> then
-      <code>git lfs pull</code>. If the repo has old clone metadata, delete the checkout and clone afresh.</li>
-      <li><strong>Harness writes succeed but Unreal shows nothing</strong> — Unreal caches assets. Right-click
-      the <code>Generated</code> folder in the Content Browser and choose <em>Refresh</em>.</li>
-    </ul>
-    <div class="callout callout-warn">
-      <strong>Branching rule.</strong> Create <code>track3/&lt;your-handle&gt;/&lt;room-name&gt;</code> for
-      every new room. Large binary commits go through Git LFS only.
-    </div>
-  </div>
-
-  <div class="track-nav">
-    <a href="ka_track3_vr.html" class="cta-button secondary">← Back to Track 3</a>
-    <a href="ka_technical_setup.html" class="cta-button">Full Technical Setup →</a>
-  </div>
-</div>
-
+  <script src="../ka_canonical_navbar.js" defer></script>
 </body>
 </html>

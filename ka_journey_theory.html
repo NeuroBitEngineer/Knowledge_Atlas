@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Theory deep-dive — Knowledge Atlas complicated surfaces</title>
+<meta name="description" content="Theory deep-dive: what this page displays, who needs it and why, the design challenge, the naive solution in place now, and per-user-type critique prompts.">
+<script src="ka_canonical_navbar.js" defer></script>
+<script src="ka_user_type.js" defer></script>
+<script src="ka_journey_surface.js" defer></script>
+<script src="ka_data_adapter.js"></script>
+<link rel="stylesheet" href="ka_journey_page.css">
+<style>
+  .j-theory-live{background:#F7F4EF;border:1px solid #E0D8CC;border-radius:14px;padding:18px 20px;margin:0 0 18px}
+  .j-theory-live h2{font-family:Georgia,serif;color:#1C3D3A;font-size:1.2rem;margin-bottom:8px}
+  .j-theory-live p{font-size:.92rem;line-height:1.6;color:#40514D}
+  .j-theory-toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:14px 0 16px}
+  .j-theory-toolbar label{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:#6B6B6B;font-weight:700}
+  .j-theory-toolbar select{min-width:260px;padding:10px 12px;border-radius:10px;border:1px solid #D6CEC2;background:#fff;color:#1C3D3A}
+  .j-theory-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px}
+  .j-theory-metric{background:#fff;border:1px solid #E0D8CC;border-radius:12px;padding:13px 14px}
+  .j-theory-metric .label{font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:#8A9A96;font-weight:700;margin-bottom:4px}
+  .j-theory-metric .value{font-size:1.18rem;color:#1C3D3A;font-weight:700}
+  .j-theory-metric .sub{font-size:.82rem;color:#6B6B6B;line-height:1.45;margin-top:4px}
+  .j-theory-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:14px}
+  .j-theory-card{background:#fff;border:1px solid #E0D8CC;border-radius:12px;padding:15px 16px}
+  .j-theory-card h3{font-size:1rem;color:#1C3D3A;margin-bottom:6px}
+  .j-theory-card p{font-size:.88rem;color:#40514D;line-height:1.55}
+  .j-theory-list{display:grid;gap:10px}
+  .j-theory-chip-row{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 0}
+  .j-theory-chip,.j-theory-chip-link{display:inline-flex;align-items:center;padding:5px 10px;border:1px solid #E0D8CC;border-radius:999px;background:#F9F7F2;color:#1C3D3A;font-size:.78rem;text-decoration:none}
+  .j-theory-chip-link:hover{border-color:#2A7868;color:#2A7868}
+  .j-theory-handoff{background:#FFF8ED;border:1px solid #E9D8B8;border-radius:12px;padding:12px 14px;margin:0 0 14px}
+  .j-theory-paper{padding:10px 12px;border:1px solid #ECE4D8;border-radius:10px;background:#FCFAF6}
+  .j-theory-paper b{color:#1C3D3A}
+  .j-theory-paper .meta{font-size:.8rem;color:#6B6B6B;margin-top:4px}
+  .j-theory-pnu{margin-top:8px;border-left:3px solid #E8872A;background:#fff;padding:10px 12px;border-radius:0 8px 8px 0;font-size:.84rem;color:#40514D;line-height:1.5}
+  .j-theory-loading,.j-theory-error{padding:14px 16px;border-radius:12px}
+  .j-theory-loading{background:#F9F5EE;color:#6B6B6B}
+  .j-theory-error{background:#F8D7DA;color:#8A1A25}
+  @media (max-width:860px){.j-theory-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body data-ka-regime="global" data-ka-active="" data-j-group="complicated">
+<div id="ka-navbar-slot"></div>
+
+<div class="j-shell">
+
+  <aside class="j-sidebar" id="j-sidebar-slot" aria-label="Complicated-surface journey index"></aside>
+
+  <main class="j-main">
+
+    <div class="j-header">
+      <div class="eyebrow">Complicated journey surface · Layer E · Mechanisms &amp; theories</div>
+      <h1>Theory deep-dive</h1>
+      <div class="j-meta">
+        <span><b>Roles served</b> researcher, 160_student, public_visitor</span>
+        <span><b>Current status</b> <span class="status-pill prototype">prototype</span></span>
+        <span><b>Complexity tier</b> Medium — content-heavy but bounded</span>
+      </div>
+    </div>
+
+
+    <aside class="j-t4-banner" style="background:#EFECFA;border-left:4px solid #4A3A8E;border-radius:6px;padding:12px 16px;margin:0 0 18px 0;font-size:0.9rem;color:#2A2250;line-height:1.5">
+      <b style="color:#4A3A8E">Track 4 redesign target.</b> A first serious pass exists; affordances are incomplete. Track 4 owns this page&apos;s redesign through seven graded stages: heuristic audit (T4.a), scenario walkthrough (T4.b), usability pilot (T4.c), severity rubric (T4.d), reproducibility check (T4.e), mid-fidelity redesign (T4.f), and final report (T4.g). Every track may read the page; only Track 4 proposes new designs. The full deliverable chain lives at <a href="160sp/ka_track4_hub.html" style="color:#4A3A8E;font-weight:600">Track 4 hub, Region 3.5</a>.
+    </aside>
+
+    <div class="j-siblings" id="j-siblings-slot"></div>
+
+    <section class="j-theory-live" id="j-theory-live">
+      <div class="j-theory-loading">Loading current Atlas theory companion…</div>
+    </section>
+
+    <div class="j-section">
+      <h2><span class="h2-icon">◧</span><span class="h2-text">What this page displays</span><span class="h2-hint">the information on offer</span></h2>
+    <p>The theory deep-dive lets a user read about one of the 24 theoretical frameworks the Atlas indexes. Eleven are T1 "foundational" theories — Attention Restoration Theory, Stress Recovery Theory, Prospect-Refuge among them. Thirteen are T1.5 domain-specific theories — fractal-dimension theory of visual preference, biophilic-hypothesis variants, and their kin.</p>
+    <p>For each theory the page shows the core claim in plain language, the mechanisms the theory predicts, the outcomes it has been used to explain, the empirical warrants that support or undercut its predictions, and the relationships to neighbouring theories (compatible, competing, specialises, generalises).</p>
+    <p>Theories are the Atlas's most stable content. They are also the content most prone to overclaiming — an elegant theoretical framework is easier to present than the messy empirical record under it. The page must communicate theoretical maturity — how much of the theory is actually tested — rather than letting every theory look equally well-supported.</p>
+    </div>
+
+    <div class="j-section">
+      <h2><span class="h2-icon">☰</span><span class="h2-text">Who needs this, and why</span><span class="h2-hint">functions served, per user type</span></h2>
+      <ul class="role-list">
+      <li><span class="role-label">Public visitor</span>A public visitor often arrives at a theory page from a Wikipedia link or a Google result; the page must land a coherent one-minute read before offering the deeper structure.</li>
+      <li><span class="role-label">COGS 160 student</span>Track 1 students use theories to anchor their tagging schema; Track 3 students pick one theory whose mechanism they will operationalise in VR.</li>
+      <li><span class="role-label">Researcher</span>To triage whether a theory's current state of evidence supports the use they want to put it to.</li>
+      <li><span class="role-label">Practitioner</span>Practitioners rarely want theory deep-dives; they are usually better served by mechanism or topic pages. The theory page should offer a "for practitioners" alternative route at the top.</li>
+      <li><span class="role-label">Administrator</span>To mark a theory as <code>draft</code> / <code>reviewed</code> / <code>contested</code> and to attach the responsible review panel.</li>
+      </ul>
+    </div>
+
+    <div class="j-section">
+      <h2><span class="h2-icon">△</span><span class="h2-text">Why this page is hard to design</span><span class="h2-hint">the challenges</span></h2>
+      <ol>
+      <li><b>Tier distinction.</b> T1 and T1.5 theories need to be visibly distinct; mixing them flattens a principled distinction.</li>
+      <li><b>Maturity display.</b> A well-validated theory and a speculative theory render the same on a naive template. The page must surface how much empirical work anchors each claim.</li>
+      <li><b>Cross-theory linkage.</b> Users frequently want "what's the difference between Attention Restoration Theory and Stress Recovery Theory?" — a comparative view that the deep-dive page does not by itself afford.</li>
+      <li><b>Citation density.</b> A well-developed theory has a hundred-plus citations. The page must rank and filter rather than list.</li>
+      <li><b>Draft banner.</b> All framework pages are currently marked "working draft — expert review in progress"; the page must explain what that means without chilling the reader into doubt.</li>
+      </ol>
+    </div>
+
+    <div class="j-section j-section-naive">
+      <h2><span class="h2-icon">✗</span><span class="h2-text">The simple naive solution in place now</span><span class="h2-hint">what you'll actually see</span></h2>
+      <div class="j-naive">
+        <span class="j-naive-label">naive — the current implementation</span>
+        <div class="j-naive-body"><p>The current page is a long markdown-rendered essay per theory, with headings for <em>core claim</em>, <em>predictions</em>, <em>evidence</em>, and <em>references</em>. There is no comparative view, no maturity display, and no interactivity.</p></div>
+      </div>
+      <div class="j-naive-why"><b>Why this is inadequate.</b> The prose is academically respectable but visually monotonous; a reader cannot see at a glance which theory has a thousand citations versus ten, cannot compare two theories side-by-side, and cannot navigate the graph of theoretical relationships. The draft banner at the top of every page is handled consistently (good) but does not specify what the panel review process will actually check (bad).</div>
+    </div>
+
+    <div class="j-section">
+      <h2><span class="h2-icon">✎</span><span class="h2-text">Critique it from each user's perspective</span><span class="h2-hint">who is and is not served by the naive solution</span></h2>
+      <p>For each user type below, write one to three sentences: what in the naive solution works for that user, what fails, and what one thing a redesign should change first. Your drafts save to your browser; copy them into your T4.a or T4.f workspace when you are ready.</p>
+      <div class="j-critique">
+        <span class="j-critique-label">critique by user type</span>
+      <div class="role-crit">
+        <div class="rc-head">Public visitor</div>
+        <div style="font-size:0.82rem;color:#6B6B6B;margin-bottom:6px">a scientifically-curious layperson who arrived from a link</div>
+        <textarea id="crit_public_visitor" placeholder="What works for this user, what fails, and one thing a redesign should change first."></textarea>
+      </div>
+      <div class="role-crit">
+        <div class="rc-head">COGS 160 student</div>
+        <div style="font-size:0.82rem;color:#6B6B6B;margin-bottom:6px">a student working through one of the four tracks</div>
+        <textarea id="crit_160_student" placeholder="What works for this user, what fails, and one thing a redesign should change first."></textarea>
+      </div>
+      <div class="role-crit">
+        <div class="rc-head">Researcher</div>
+        <div style="font-size:0.82rem;color:#6B6B6B;margin-bottom:6px">a working scientist (graduate student, postdoc, faculty) using the Atlas to triage literature</div>
+        <textarea id="crit_researcher" placeholder="What works for this user, what fails, and one thing a redesign should change first."></textarea>
+      </div>
+      <div class="role-crit">
+        <div class="rc-head">Practitioner</div>
+        <div style="font-size:0.82rem;color:#6B6B6B;margin-bottom:6px">an architect, designer, or clinician looking for actionable evidence</div>
+        <textarea id="crit_practitioner" placeholder="What works for this user, what fails, and one thing a redesign should change first."></textarea>
+      </div>
+      <div class="role-crit">
+        <div class="rc-head">Administrator</div>
+        <div style="font-size:0.82rem;color:#6B6B6B;margin-bottom:6px">a course or site admin doing quality control</div>
+        <textarea id="crit_admin" placeholder="What works for this user, what fails, and one thing a redesign should change first."></textarea>
+      </div>
+        <button type="button" class="save-btn" onclick="saveCritique('theory')">Save critiques (to browser only)</button>
+        <span class="j-status" id="j-crit-status">Saved.</span>
+      </div>
+    </div>
+
+    <div class="j-section">
+      <h2><span class="h2-icon">☷</span><span class="h2-text">Data files and endpoints to populate this page</span><span class="h2-hint">what a real implementation would call</span></h2>
+      <ul class="file-list">
+      <li><span class="file-type data">data</span><a>data/ka_payloads/theories.json</a><span class="file-desc">Per-theory records with core claim, predictions, linked mechanisms, linked warrants, and relation edges to sibling theories.</span></li>
+      <li><span class="file-type data">data</span><a>data/ka_payloads/theory_maturity.json</a><span class="file-desc">Per-theory maturity metrics: citation count in corpus, number of successful vs. failed predictions, review-panel status.</span></li>
+      <li><span class="file-type lib">lib</span><a>ka_framework_page.html (per theory)</a><span class="file-desc">Currently 24 static pages, one per theory. A shared renderer fed by <code>theories.json</code> would reduce duplication.</span></li>
+      <li><span class="file-type api">api</span><a>/api/theory/compare</a><span class="file-desc">Endpoint for the missing comparative view; not yet implemented.</span></li>
+      <li><span class="file-type missing">missing</span><a>theory-relation graph</a><span class="file-desc">The cross-theory relationships (compatible / competes / specialises / generalises) exist in narrative form but are not a machine-readable graph yet.</span></li>
+      </ul>
+    </div>
+
+    <div class="j-section" style="background:#F9F5EE">
+      <h2><span class="h2-icon">→</span><span class="h2-text">Status and next steps</span></h2>
+      <p>The theory layer is the most read surface after the topic pages. It is a sensible T4.f redesign target because the 24 current pages share a common structure and a single template redesign cascades to all of them.</p>
+    </div>
+
+  </main>
+
+</div>
+
+<script>
+function theoryEsc(value) {
+  return String(value == null ? '' : value).replace(/[&<>"']/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;', "'":'&#39;'}[c])
+  );
+}
+
+function theoryCompact(text, limit = 220) {
+  const value = String(text || '').replace(/\s+/g, ' ').trim();
+  if (!value) return '';
+  return value.length <= limit ? value : value.slice(0, limit - 1).trimEnd() + '…';
+}
+
+function theoryJourneyHref(path, params = {}) {
+  const query = new URLSearchParams();
+  Object.entries(params || {}).forEach(([key, value]) => {
+    const text = String(value || '').trim();
+    if (text) query.set(key, text);
+  });
+  const suffix = query.toString();
+  return suffix ? `${path}?${suffix}` : path;
+}
+
+function hydrateTheoryJourneyLinks(root) {
+  (root || document).querySelectorAll('[data-runtime-link]').forEach(node => {
+    node.setAttribute('href', node.getAttribute('data-runtime-link'));
+  });
+}
+
+function renderTheoryHandoff(context) {
+  const fromTopic = String((context && context.fromTopic) || '').trim();
+  const fromArticle = String((context && context.fromArticle) || '').trim();
+  if (!fromTopic && !fromArticle) return '';
+
+  const parts = [];
+  if (fromTopic) {
+    parts.push(`Opened from topic <a class="j-theory-chip-link" data-runtime-link="${theoryEsc(theoryJourneyHref('ka_topic_facet_view.html', { topic: fromTopic, from_article: fromArticle }))}">${theoryEsc(fromTopic)}</a>.`);
+  }
+  if (fromArticle) {
+    parts.push(`${fromTopic ? 'The thread originated in' : 'Opened from'} article <a class="j-theory-chip-link" href="ka_article_view.html?id=${encodeURIComponent(fromArticle)}">${theoryEsc(fromArticle)}</a>.`);
+  }
+  return `
+    <div class="j-theory-handoff" id="j-theory-handoff">
+      <b>Journey handoff.</b> ${parts.join(' ')}
+    </div>
+  `;
+}
+
+function renderTheoryCompanion(payload, selectedId, journeyContext = {}) {
+  const mount = document.getElementById('j-theory-live');
+  const theories = (payload && payload.theories) || [];
+  if (!mount) return;
+  if (!theories.length) {
+    mount.innerHTML = '<div class="j-theory-error"><b>Could not load the public theory payload.</b> No theories were available for rendering.</div>';
+    return;
+  }
+  const byId = new Map(theories.map(row => [row.id, row]));
+  const chosen = byId.get(selectedId) || theories[0];
+  const evidence = chosen.evidence_profile || {};
+  const papers = (chosen.representative_papers || []).slice(0, 4);
+  const related = (chosen.related_theories || []).slice(0, 5);
+  const pnus = (chosen.pnu_examples || []).slice(0, 3);
+  const topics = (chosen.topic_links || []).slice(0, 5);
+
+  mount.innerHTML = `
+    <h2>Current theory atlas companion</h2>
+    <p>This live layer is drawn from <code>data/ka_payloads/theories.json</code>. It does not replace the critique brief below; it gives the brief a current evidential object.</p>
+    ${renderTheoryHandoff(journeyContext)}
+    <div class="j-theory-toolbar">
+      <label for="j-theory-select">Active theory</label>
+      <select id="j-theory-select">
+        ${theories.map(row => `<option value="${theoryEsc(row.id)}"${row.id === chosen.id ? ' selected' : ''}>${theoryEsc(row.name || row.id)}</option>`).join('')}
+      </select>
+    </div>
+    <div class="j-theory-metrics">
+      <div class="j-theory-metric">
+        <div class="label">Articles</div>
+        <div class="value">${theoryEsc(chosen.article_count || 0)}</div>
+        <div class="sub">Corpus articles currently linked to this theory.</div>
+      </div>
+      <div class="j-theory-metric">
+        <div class="label">Topic links</div>
+        <div class="value">${theoryEsc(chosen.topic_count || topics.length || 0)}</div>
+        <div class="sub">Topic bundles in which this theory currently appears.</div>
+      </div>
+      <div class="j-theory-metric">
+        <div class="label">Debate clusters</div>
+        <div class="value">${theoryEsc(chosen.debate_cluster_count || 0)}</div>
+        <div class="sub">Current debate clusters that carry this theory.</div>
+      </div>
+      <div class="j-theory-metric">
+        <div class="label">Support / attack</div>
+        <div class="value">${theoryEsc(evidence.support_edge_count || 0)} / ${theoryEsc(evidence.attack_edge_count || 0)}</div>
+        <div class="sub">Edge counts from the rebuilt evidence profile.</div>
+      </div>
+    </div>
+    <div class="j-theory-grid">
+      <section class="j-theory-card">
+        <h3>Nearby theories and active topics</h3>
+        <p>Theory pages become more truthful when they reveal their neighbourhood rather than presenting themselves as isolated monuments.</p>
+        <div class="j-theory-chip-row">
+          ${related.length ? related.map(row => `<a class="j-theory-chip-link" data-runtime-link="${theoryEsc(theoryJourneyHref('ka_home_theory.html', { theory: row.id, from_topic: journeyContext.fromTopic || '', from_article: journeyContext.fromArticle || '' }))}">${theoryEsc(row.name)}${row.weight ? ` · ${theoryEsc(row.weight)}` : ''}</a>`).join('') : '<span class="j-theory-chip">No neighbouring theories exported yet.</span>'}
+        </div>
+        <div class="j-theory-chip-row">
+          ${topics.length ? topics.map(row => `<a class="j-theory-chip-link" data-runtime-link="${theoryEsc(theoryJourneyHref('ka_topic_facet_view.html', { topic: row.label, from_article: journeyContext.fromArticle || '' }))}">${theoryEsc(row.label)}${row.paper_count ? ` · ${theoryEsc(row.paper_count)}` : ''}</a>`).join('') : '<span class="j-theory-chip">No linked topic bundles yet.</span>'}
+        </div>
+      </section>
+      <section class="j-theory-card">
+        <h3>Representative papers</h3>
+        <div class="j-theory-list">
+          ${papers.length ? papers.map(row => `
+            <article class="j-theory-paper">
+              <b>${theoryEsc(row.title || row.paper_id)}</b>
+              <div class="meta">${theoryEsc(row.paper_id || '')}${row.primary_topic ? ` · ${theoryEsc(row.primary_topic)}` : ''}${row.claim_count ? ` · ${theoryEsc(row.claim_count)} claims` : ''}</div>
+            </article>`).join('') : '<p>No representative papers were exported for this theory.</p>'}
+        </div>
+      </section>
+      <section class="j-theory-card">
+        <h3>Paper-level PNU glimpses</h3>
+        <div class="j-theory-list">
+          ${pnus.length ? pnus.map(row => `
+            <article class="j-theory-paper">
+              <b>${theoryEsc(row.title || row.paper_id)}</b>
+              <div class="meta">${theoryEsc(row.paper_id || '')}</div>
+              <div class="j-theory-pnu">${theoryEsc(theoryCompact(row.short_summary, 260))}</div>
+            </article>`).join('') : '<p>No PNU examples are yet attached to this theory in the public export.</p>'}
+        </div>
+      </section>
+      <section class="j-theory-card">
+        <h3>Why this live layer matters</h3>
+        <p>It shows, in one place, whether the theory is densely represented, where it appears in the topic space, what nearby theories compete with it, and which paper-level mechanistic summaries currently instantiate it. The static prose below can now be read against current evidence rather than in a vacuum.</p>
+        <div class="j-theory-chip-row">
+          <a class="j-theory-chip-link" id="j-theory-explorer-link" data-runtime-link="${theoryEsc(theoryJourneyHref('ka_home_theory.html', { theory: chosen.id, from_topic: journeyContext.fromTopic || '', from_article: journeyContext.fromArticle || '' }))}">Open theory explorer</a>
+          <a class="j-theory-chip-link" id="j-theory-mechanism-link" data-runtime-link="${theoryEsc(theoryJourneyHref('ka_journey_mechanism.html', { theory: chosen.id, from_topic: journeyContext.fromTopic || '', from_article: journeyContext.fromArticle || '' }))}">Carry into mechanism journey</a>
+        </div>
+      </section>
+    </div>
+  `;
+  hydrateTheoryJourneyLinks(mount);
+
+  const select = document.getElementById('j-theory-select');
+  if (select) {
+    select.addEventListener('change', () => {
+      const next = theories.find(row => row.id === select.value) || theories[0];
+      const url = new URL(window.location.href);
+      url.searchParams.set('theory', next.id);
+      window.history.replaceState({}, '', url);
+      renderTheoryCompanion(payload, next.id, journeyContext);
+    });
+  }
+}
+
+async function initTheoryCompanion() {
+  const mount = document.getElementById('j-theory-live');
+  if (!mount) return;
+  try {
+    const payload = window.KA_DATA_ADAPTER
+      ? await window.KA_DATA_ADAPTER.loadPayload('theories', { theories: [] })
+      : await fetch('data/ka_payloads/theories.json').then(r => r.json());
+    const params = new URLSearchParams(window.location.search);
+    renderTheoryCompanion(payload, params.get('theory'), {
+      fromTopic: params.get('from_topic') || '',
+      fromArticle: params.get('from_article') || '',
+    });
+  } catch (error) {
+    mount.innerHTML = '<div class="j-theory-error"><b>Could not load the current Atlas theory companion.</b> Error: ' + theoryEsc(error.message || error) + '</div>';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  if (window.renderJourneySidebar) window.renderJourneySidebar('theory');
+  if (window.renderJourneySiblings) window.renderJourneySiblings('theory');
+  if (window.restoreCritique) window.restoreCritique('theory');
+  initTheoryCompanion();
+});
+</script>
+</body>
+</html>

@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Technical Setup — COGS 160 — Knowledge Atlas</title>
+  <link rel="stylesheet" href="../ka_atlas_shell.css">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -25,33 +26,7 @@
       line-height: 1.65;
     }
 
-    /* ── Nav ── */
-    nav {
-      position: sticky; top: 0; z-index: 500;
-      background: var(--navy); display: flex; align-items: center;
-      gap: 24px; padding: 0 28px; min-height: 52px;
-      border-bottom: 2px solid var(--amber);
-    }
-    .nav-brand { color: #A8C8BF; font-size: 0.78rem; font-weight: 700;
-      letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none; }
-    .nav-brand:hover { color: var(--amber); }
-    .nav-center { display:flex; align-items:center; gap:14px; flex:1; }
-    nav a.nav-link { color: #7AACA0; font-size: 0.8rem; text-decoration: none;
-      transition: color 0.15s, background 0.15s; padding: 6px 10px; border-radius: 6px; }
-    nav a.nav-link:hover { color: #fff; background: rgba(255,255,255,0.08); }
-    nav a.nav-link.active { color: #F5A623; background: rgba(232,135,42,0.12); }
-    .nav-right { display:flex; align-items:center; gap:12px; }
-    .mode-select {
-      font-size: 0.76rem; padding: 6px 10px; border-radius: 16px;
-      border: 1px solid rgba(168, 200, 191, 0.34); background: rgba(255,255,255,0.05);
-      color: #D8EAE4;
-    }
-    .mode-select option { color: var(--navy); }
-    .mode-pill {
-      background: rgba(42,120,104,0.3); color: #5AC8AA; padding: 4px 12px;
-      border-radius: 20px; font-family: Arial, sans-serif; font-size: 0.75rem;
-      font-weight: 700; letter-spacing: 0.05em;
-    }
+    /* ── Nav ── (handled by ka_canonical_navbar.js + ka_atlas_shell.css) */
 
     /* ── Hero ── */
     .page-hero {
@@ -267,21 +242,7 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    /* ── Breadcrumb ── */
-    .breadcrumb-bar {
-      background: var(--light);
-      padding: 10px 40px;
-      border-bottom: 1px solid var(--border);
-      font-size: 0.82rem;
-    }
-    .breadcrumb-bar a {
-      color: var(--green);
-      text-decoration: none;
-      font-weight: 600;
-    }
-    .breadcrumb-bar a:hover { text-decoration: underline; }
-    .breadcrumb-bar .sep { color: var(--muted); margin: 0 6px; }
-    .breadcrumb-bar .current { color: var(--navy); font-weight: 700; }
+    /* ── Breadcrumb ── (handled by ka_canonical_navbar.js + ka_atlas_shell.css) */
 
     /* ── Version badge ── */
     .version-badge {
@@ -352,30 +313,11 @@
     .setup-section { scroll-margin-top: 140px; }
   </style>
 </head>
-<body>
+<body data-ka-active=""
+      data-ka-crumbs='[["Home","ka_home.html"],["COGS 160","160sp/ka_schedule.html"],["Technical Setup",""]]' data-ka-regime="160sp">
 
-<nav>
-  <a href="../ka_home.html" class="nav-brand">Knowledge Atlas</a>
-  <div class="nav-center">
-    <a id="nav-shell-explore" href="../ka_topics.html" class="nav-link">Explore</a>
-    <a id="nav-shell-evidence" href="../ka_evidence.html" class="nav-link">Evidence</a>
-    <a id="nav-shell-gaps" href="../ka_gaps.html" class="nav-link">Gaps</a>
-    <a id="nav-shell-articles" href="../ka_article_search.html" class="nav-link">Articles</a>
-    <a id="nav-shell-contribute" href="../ka_contribute.html" class="nav-link">Contribute</a>
-    <a id="nav-shell-course" href="ka_student_setup.html" class="nav-link active">Course</a>
-  </div>
-  <div class="nav-right">
-    <select class="mode-select" id="setup-mode-select" aria-label="Switch user mode">
-      <option value="student_explorer">Student explorer</option>
-      <option value="researcher">Researcher</option>
-      <option value="contributor">Contributor</option>
-      <option value="instructor">Instructor</option>
-      <option value="practitioner">Practitioner</option>
-      <option value="theory_mechanism_explorer">Theory Explorer</option>
-    </select>
-    <div class="mode-pill" id="setup-mode-pill">STUDENT EXPLORER</div>
-  </div>
-</nav>
+<div id="ka-navbar-slot"></div>
+<div id="ka-breadcrumb-slot"></div>
 
 <aside class="track-subnav" aria-label="On this page">
   <div class="track-subnav-title">On this page</div>
@@ -390,12 +332,7 @@
   <a href="week2_exercises.html" class="track-subnav-cta">Week 2 Exercises →</a>
 </aside>
 
-<!-- Breadcrumb -->
-<div class="breadcrumb-bar">
-  <a href="ka_student_setup.html">COGS160 Start</a>
-  <span class="sep">/</span>
-  <span class="current">Technical Setup</span>
-</div>
+<!-- Breadcrumb handled by canonical navbar -->
 
 <div class="page-hero">
   <div class="eyebrow">COGS 160 &middot; Technical Setup Guide</div>
@@ -1078,6 +1015,7 @@ window.KA_ABOUT_PAGE = {
 </script>
 <script src="../ka_about_page.js"></script>
 <script src="../ka_ui_fixes.js"></script>
+<script src="../ka_canonical_navbar.js" defer></script>
 
 </body>
 </html>

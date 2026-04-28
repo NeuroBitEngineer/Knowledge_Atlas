@@ -29,6 +29,7 @@ VISUALS_OUT.mkdir(parents=True, exist_ok=True)
 WORKFLOW_DB_PATH = KA_REPO / 'data' / 'ka_workflow.db'
 REBUILD_DB_PATH = AE / 'data' / 'rebuild' / 'web_persistence_v5.db'
 REGISTRY_DB_PATH = AE / 'data' / 'verification_runs' / 'v7_gold_extraction_registry.db'
+LIFECYCLE_DB_PATH = AE / 'data' / 'pipeline_lifecycle_full.db'
 
 if str(AE) not in sys.path:
     sys.path.insert(0, str(AE))
@@ -59,10 +60,10 @@ FRONTIER_QUESTIONS_PATH = AE / 'data' / 'interpretation_space' / 'phase4' / 'pri
 VALIDATION_COMPLETENESS_PATH = AE / 'data' / 'interpretation_space' / 'phase4' / 'validation_completeness.json'
 BOUNDARY_MAP_PATH = AE / 'data' / 'interpretation_space' / 'phase4' / 'boundary_map.json'
 DEFAULT_TRACK_TARGETS = [
-    ('Track 1 — Image Tagging', 5),
-    ('Track 2 — Article Finding', 5),
-    ('Track 3 — VR Production', 3),
-    ('Track 4 — GUI Evaluation & Experiment Design', 3),
+    ('Track 1 — Image Tagger', 5),
+    ('Track 2 — Article Finder', 5),
+    ('Track 3 — AI & VR', 3),
+    ('Track 4 — Interaction Design', 3),
 ]
 
 try:
@@ -980,6 +981,184 @@ def load_jsonl(path):
     return rows
 
 
+def safe_json_loads(value, default=None):
+    if isinstance(value, (dict, list)):
+        return value
+    if value in (None, ''):
+        return default
+    try:
+        return json.loads(value)
+    except Exception:
+        return default
+
+
+def clean_rich_text(value):
+    text = str(value or '').replace('\r', '\n').strip()
+    if not text:
+        return ''
+    text = re.sub(r'^---\s*\n.*?\n---\s*\n', '', text, flags=re.S)
+    text = text.replace('**', '')
+    text = re.sub(r'\n\s+', '\n', text)
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    return text.strip()
+
+
+def exportable_path(value):
+    raw = str(value or '').strip()
+    if not raw:
+        return ''
+    try:
+        path = Path(raw)
+    except Exception:
+        return raw
+    try:
+        return str(path.relative_to(ROOT))
+    except Exception:
+        try:
+            return str(path.relative_to(AE))
+        except Exception:
+            return str(path)
+
+
+def compact_panel_basis_rows(rows, limit=6):
+    out = []
+    for row in rows[:limit]:
+        if not isinstance(row, dict):
+            continue
+        out.append(
+            {
+                'panel_id': str(row.get('panel_id') or '').strip(),
+                'role': str(row.get('role') or '').strip(),
+                'status': str(row.get('status') or '').strip(),
+                'used_to_generate': bool(row.get('used_to_generate')),
+                'doc_path': exportable_path(row.get('doc_path')),
+            }
+        )
+    return out
+
+
+def extract_science_summary_sections(raw_summary):
+    payload = safe_json_loads(raw_summary, {})
+    if isinstance(payload, dict):
+        sections = payload.get('sections') or {}
+        if isinstance(sections, dict) and sections:
+            return {
+                key: clean_rich_text(value)
+                for key, value in sections.items()
+                if clean_rich_text(value)
+            }
+    text = clean_rich_text(raw_summary)
+    if not text:
+        return {}
+    text = re.split(r'\n##\s+', text, 1)[0].strip()
+    return {'Core Finding': text}
+
+
+def first_sentence_block(text, max_words=340):
+    value = clean_rich_text(text)
+    if not value:
+        return ''
+    words = value.split()
+    if len(words) <= max_words:
+        return value
+    clipped = ' '.join(words[:max_words]).strip()
+    if '. ' in clipped:
+        clipped = clipped.rsplit('. ', 1)[0].strip()
+        if clipped and not clipped.endswith('.'):
+            clipped += '.'
+    return clipped or value
+
+
+def load_accepted_row_lookup(paper_ids):
+    lookup = {}
+    if not LIFECYCLE_DB_PATH.exists():
+        return lookup
+    try:
+        conn = sqlite3.connect(str(LIFECYCLE_DB_PATH))
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT paper_id, source_path
+            FROM paper_artifact_provenance
+            WHERE artifact_kind = 'accepted_row_json'
+            """
+        )
+        rows = cur.fetchall()
+    except Exception:
+        return lookup
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+    wanted = {str(paper_id).strip() for paper_id in paper_ids if str(paper_id).strip()}
+    by_path = defaultdict(set)
+    for row in rows:
+        paper_id = str(row['paper_id'] or '').strip()
+        source_path = str(row['source_path'] or '').strip()
+        if paper_id and paper_id in wanted and source_path:
+            by_path[source_path].add(paper_id)
+
+    for source_path, wanted_ids in by_path.items():
+        path = Path(source_path)
+        if not path.exists():
+            continue
+        try:
+            with path.open(encoding='utf-8') as handle:
+                for line in handle:
+                    text = line.strip()
+                    if not text:
+                        continue
+                    try:
+                        row = json.loads(text)
+                    except Exception:
+                        continue
+                    paper_id = str(row.get('paper_id') or '').strip()
+                    if paper_id and paper_id in wanted_ids and paper_id not in lookup:
+                        lookup[paper_id] = row
+        except Exception:
+            continue
+    return lookup
+
+
+def load_lifecycle_article_details(paper_ids):
+    details = {
+        'science_writer': {},
+        'pnu': {},
+        'structured_claims': {},
+    }
+    if not LIFECYCLE_DB_PATH.exists():
+        return details
+    wanted = {str(paper_id).strip() for paper_id in paper_ids if str(paper_id).strip()}
+    try:
+        conn = sqlite3.connect(str(LIFECYCLE_DB_PATH))
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        for table_name, bucket in (
+            ('science_writer_results', 'science_writer'),
+            ('pnu_artifacts', 'pnu'),
+            ('structured_claims', 'structured_claims'),
+        ):
+            try:
+                cur.execute(f"SELECT * FROM {table_name}")
+            except Exception:
+                continue
+            for row in cur.fetchall():
+                paper_id = str(row['paper_id'] or '').strip()
+                if paper_id and paper_id in wanted and paper_id not in details[bucket]:
+                    details[bucket][paper_id] = dict(row)
+    except Exception:
+        return details
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+    return details
+
+
 def parse_page_number(value):
     if value in (None, ''):
         return None
@@ -1020,14 +1199,22 @@ def compact_reason_list(reasons, limit=2):
 
 def copy_visual_asset(src_path, paper_id):
     src = Path(src_path)
-    if not src.exists():
+    try:
+        if not src.exists():
+            return ''
+    except (PermissionError, OSError):
         return ''
     target_dir = VISUALS_OUT / paper_id
     target_dir.mkdir(parents=True, exist_ok=True)
     dst = target_dir / src.name
-    if not dst.exists() or src.stat().st_mtime > dst.stat().st_mtime:
-        shutil.copy2(src, dst)
-    return f"data/ka_payloads/article_visuals/{paper_id}/{src.name}"
+    try:
+        if not dst.exists() or src.stat().st_mtime > dst.stat().st_mtime:
+            shutil.copy2(src, dst)
+    except (PermissionError, OSError):
+        pass
+    if dst.exists():
+        return f"data/ka_payloads/article_visuals/{paper_id}/{src.name}"
+    return ''
 
 
 def build_visual_support_for_paper(paper_id, article_type, representative_claim):
@@ -1239,12 +1426,12 @@ def ensure_workflow_db():
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             [
-                ('student_alex_chen', 'Alex', 'Chen', 'alex.chen@example.edu', 'undergrad', 'UC San Diego', 'Cognitive Science', 'student_explorer', 'explore_literature', 'Track 2 — Article Finding', 'Track 4 — GUI Evaluation & Experiment Design', 'approved', 'Track 2 — Article Finding', '', '2026-03-20T09:00:00Z', '2026-03-21T18:00:00Z', ''),
-                ('student_jordan_miles', 'Jordan', 'Miles', 'jordan.miles@example.edu', 'undergrad', 'UC San Diego', 'Design Lab', 'contributor', 'contribute', 'Track 1 — Image Tagging', 'Track 2 — Article Finding', 'approved', 'Track 1 — Image Tagging', '', '2026-03-20T11:00:00Z', '2026-03-21T18:10:00Z', ''),
-                ('student_taylor_reed', 'Taylor', 'Reed', 'taylor.reed@example.edu', 'graduate', 'UC San Diego', 'VR Lab', 'contributor', 'contribute', 'Track 3 — VR Production', 'Track 4 — GUI Evaluation & Experiment Design', 'approved', 'Track 3 — VR Production', '', '2026-03-20T12:00:00Z', '2026-03-21T18:20:00Z', ''),
-                ('student_morgan_liu', 'Morgan', 'Liu', 'morgan.liu@example.edu', 'undergrad', 'UC San Diego', 'Human Factors', 'student_explorer', 'explore_literature', 'Track 4 — GUI Evaluation & Experiment Design', 'Track 2 — Article Finding', 'pending', '', '', '2026-03-24T08:30:00Z', '', ''),
-                ('student_priya_nair', 'Priya', 'Nair', 'priya.nair@example.edu', 'undergrad', 'UC San Diego', 'Psychology', 'student_explorer', 'explore_literature', 'Track 2 — Article Finding', 'Track 1 — Image Tagging', 'pending', '', '', '2026-03-24T10:15:00Z', '', ''),
-                ('student_sam_ortiz', 'Sam', 'Ortiz', 'sam.ortiz@example.edu', 'undergrad', 'UC San Diego', 'Cognitive Science', 'contributor', 'contribute', 'Track 1 — Image Tagging', 'Track 4 — GUI Evaluation & Experiment Design', 'rejected', '', 'Track capacity currently full', '2026-03-23T14:05:00Z', '', '2026-03-24T17:30:00Z'),
+                ('student_alex_chen', 'Alex', 'Chen', 'alex.chen@example.edu', 'undergrad', 'UC San Diego', 'Cognitive Science', 'student_explorer', 'explore_literature', 'Track 2 — Article Finder', 'Track 4 — Interaction Design', 'approved', 'Track 2 — Article Finder', '', '2026-03-20T09:00:00Z', '2026-03-21T18:00:00Z', ''),
+                ('student_jordan_miles', 'Jordan', 'Miles', 'jordan.miles@example.edu', 'undergrad', 'UC San Diego', 'Design Lab', 'contributor', 'contribute', 'Track 1 — Image Tagger', 'Track 2 — Article Finder', 'approved', 'Track 1 — Image Tagger', '', '2026-03-20T11:00:00Z', '2026-03-21T18:10:00Z', ''),
+                ('student_taylor_reed', 'Taylor', 'Reed', 'taylor.reed@example.edu', 'graduate', 'UC San Diego', 'VR Lab', 'contributor', 'contribute', 'Track 3 — AI & VR', 'Track 4 — Interaction Design', 'approved', 'Track 3 — AI & VR', '', '2026-03-20T12:00:00Z', '2026-03-21T18:20:00Z', ''),
+                ('student_morgan_liu', 'Morgan', 'Liu', 'morgan.liu@example.edu', 'undergrad', 'UC San Diego', 'Human Factors', 'student_explorer', 'explore_literature', 'Track 4 — Interaction Design', 'Track 2 — Article Finder', 'pending', '', '', '2026-03-24T08:30:00Z', '', ''),
+                ('student_priya_nair', 'Priya', 'Nair', 'priya.nair@example.edu', 'undergrad', 'UC San Diego', 'Psychology', 'student_explorer', 'explore_literature', 'Track 2 — Article Finder', 'Track 1 — Image Tagger', 'pending', '', '', '2026-03-24T10:15:00Z', '', ''),
+                ('student_sam_ortiz', 'Sam', 'Ortiz', 'sam.ortiz@example.edu', 'undergrad', 'UC San Diego', 'Cognitive Science', 'contributor', 'contribute', 'Track 1 — Image Tagger', 'Track 4 — Interaction Design', 'rejected', '', 'Track capacity currently full', '2026-03-23T14:05:00Z', '', '2026-03-24T17:30:00Z'),
             ],
         )
 
@@ -1258,10 +1445,10 @@ def ensure_workflow_db():
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             [
-                ('KA-PROP-0042', 'student_alex_chen', 'student', 'Track 2 — Article Finding', 'approved', 'citation', 'Impact of windows and daylight exposure on overall health and sleep quality of office workers', 'Boubekri et al. (2014). Impact of windows and daylight exposure on overall health and sleep quality of office workers. Journal of Clinical Sleep Medicine.', 'Boubekri, Cheung, Reid, Wang, Zee', 'Office workers with more daylight exposure slept longer and reported better quality of life indicators than workers in windowless offices.', '2026-03-22T09:10:00Z'),
-                ('KA-PROP-0043', 'student_alex_chen', 'student', 'Track 2 — Article Finding', 'pending', 'pdf', 'Appearance wood products and psychological well-being', 'Rice et al. (2006). Appearance wood products and psychological well-being. Wood and Fiber Science.', 'Rice, Kozak, Meitner, Cohen', 'Exploratory study of whether wood interiors shape emotional responses and perceived well-being.', '2026-03-24T11:30:00Z'),
-                ('KA-PROP-0044', 'student_jordan_miles', 'student', 'Track 1 — Image Tagging', 'approved', 'pdf', 'High-rise window views and stress recovery', '', 'Metadata pending', '', '2026-03-24T12:45:00Z'),
-                ('KA-PROP-0045', 'student_taylor_reed', 'student', 'Track 3 — VR Production', 'pending', 'citation', 'Green-water and green views from high-rise windows', 'Author metadata staged from window-view corpus.', 'Metadata pending', '', '2026-03-24T13:20:00Z'),
+                ('KA-PROP-0042', 'student_alex_chen', 'student', 'Track 2 — Article Finder', 'approved', 'citation', 'Impact of windows and daylight exposure on overall health and sleep quality of office workers', 'Boubekri et al. (2014). Impact of windows and daylight exposure on overall health and sleep quality of office workers. Journal of Clinical Sleep Medicine.', 'Boubekri, Cheung, Reid, Wang, Zee', 'Office workers with more daylight exposure slept longer and reported better quality of life indicators than workers in windowless offices.', '2026-03-22T09:10:00Z'),
+                ('KA-PROP-0043', 'student_alex_chen', 'student', 'Track 2 — Article Finder', 'pending', 'pdf', 'Appearance wood products and psychological well-being', 'Rice et al. (2006). Appearance wood products and psychological well-being. Wood and Fiber Science.', 'Rice, Kozak, Meitner, Cohen', 'Exploratory study of whether wood interiors shape emotional responses and perceived well-being.', '2026-03-24T11:30:00Z'),
+                ('KA-PROP-0044', 'student_jordan_miles', 'student', 'Track 1 — Image Tagger', 'approved', 'pdf', 'High-rise window views and stress recovery', '', 'Metadata pending', '', '2026-03-24T12:45:00Z'),
+                ('KA-PROP-0045', 'student_taylor_reed', 'student', 'Track 3 — AI & VR', 'pending', 'citation', 'Green-water and green views from high-rise windows', 'Author metadata staged from window-view corpus.', 'Metadata pending', '', '2026-03-24T13:20:00Z'),
             ],
         )
 
@@ -3388,6 +3575,669 @@ def build_topic_hierarchy_payload(articles, topic_summary, ontology_payload=None
     return heuristic_payload
 
 
+def build_topic_crosswalk_payload(topic_hierarchy):
+    views = topic_hierarchy.get('views') or {}
+    defended_view = views.get('defended') or topic_hierarchy
+    working_view = views.get('working') or topic_hierarchy
+    defended_topics = list(defended_view.get('topics') or [])
+    working_topics = {topic.get('id'): topic for topic in (working_view.get('topics') or []) if topic.get('id')}
+
+    rows = []
+    outcome_index = {}
+    family_index = {}
+
+    for topic in defended_topics:
+        topic_id = str(topic.get('id') or '').strip()
+        if not topic_id:
+            continue
+        outcome_term_id = str(topic.get('dv_focus') or '').strip() or 'unspecified.outcome'
+        outcome_label = str(topic.get('dv_focus_label') or topic.get('dv_root_label') or outcome_term_id)
+        iv_root = str(topic.get('iv_root') or '').strip() or 'unspecified'
+        iv_root_label_text = str(topic.get('iv_root_label') or iv_root_label(iv_root) or iv_root)
+        paper_ids = sorted({str(paper_id).strip() for paper_id in (topic.get('paper_ids') or []) if str(paper_id).strip()})
+        working_topic = working_topics.get(topic_id) or {}
+        working_paper_ids = sorted(
+            {str(paper_id).strip() for paper_id in (working_topic.get('paper_ids') or paper_ids) if str(paper_id).strip()}
+        )
+        defended_count = int(topic.get('paper_count') or len(paper_ids))
+        working_count = int(working_topic.get('paper_count') or len(working_paper_ids))
+
+        row = {
+            'topic_id': topic_id,
+            'topic_label': topic.get('label') or topic_id,
+            'outcome_term_id': outcome_term_id,
+            'outcome_label': outcome_label,
+            'iv_root': iv_root,
+            'iv_root_label': iv_root_label_text,
+            'iv_node': topic.get('iv_node') or iv_root,
+            'iv_label': topic.get('iv_label') or iv_root_label_text,
+            'paper_ids': paper_ids,
+            'paper_count': defended_count,
+            'defended_paper_count': defended_count,
+            'working_paper_count': max(defended_count, working_count),
+            'theories': list(topic.get('theories') or [])[:8],
+            'common_sensors': list(topic.get('sensors') or [])[:8],
+            'fronts': list(topic.get('fronts') or [])[:8],
+            'evidence_status': 'defended',
+        }
+        rows.append(row)
+
+        outcome_entry = outcome_index.setdefault(
+            outcome_term_id,
+            {
+                'outcome_term_id': outcome_term_id,
+                'outcome_label': outcome_label,
+                'paper_count': 0,
+                'topic_ids': [],
+            },
+        )
+        outcome_entry['paper_count'] += defended_count
+        outcome_entry['topic_ids'].append(topic_id)
+
+        family_entry = family_index.setdefault(
+            iv_root,
+            {
+                'iv_root': iv_root,
+                'iv_root_label': iv_root_label_text,
+                'paper_count': 0,
+                'topic_ids': [],
+            },
+        )
+        family_entry['paper_count'] += defended_count
+        family_entry['topic_ids'].append(topic_id)
+
+    for entry in outcome_index.values():
+        entry['topic_ids'] = sorted(set(entry['topic_ids']))
+        entry['topic_count'] = len(entry['topic_ids'])
+
+    for entry in family_index.values():
+        entry['topic_ids'] = sorted(set(entry['topic_ids']))
+        entry['topic_count'] = len(entry['topic_ids'])
+
+    rows.sort(key=lambda row: (-int(row.get('paper_count') or 0), row.get('topic_label') or row.get('topic_id') or ''))
+    outcome_rows = sorted(outcome_index.values(), key=lambda row: (-int(row.get('paper_count') or 0), row.get('outcome_label') or ''))
+    family_rows = sorted(family_index.values(), key=lambda row: (-int(row.get('paper_count') or 0), row.get('iv_root_label') or ''))
+
+    return {
+        'summary': {
+            'row_count': len(rows),
+            'outcome_count': len(outcome_rows),
+            'iv_root_count': len(family_rows),
+            'default_view': topic_hierarchy.get('default_view') or 'defended',
+            'source_kind': 'topic_crosswalk',
+        },
+        'rows': rows,
+        'outcome_index': outcome_rows,
+        'iv_root_index': family_rows,
+        'source_files': topic_hierarchy.get('source_files') or {},
+    }
+
+
+def build_article_details_payload(articles, evidence, argumentation):
+    paper_ids = [str(article.get('paper_id') or '').strip() for article in articles if str(article.get('paper_id') or '').strip()]
+    article_by_id = {article['paper_id']: article for article in articles if article.get('paper_id')}
+    accepted_rows = load_accepted_row_lookup(paper_ids)
+    lifecycle = load_lifecycle_article_details(paper_ids)
+
+    evidence_by_paper = defaultdict(list)
+    credence_means = {}
+    for row in evidence:
+        paper_id = str(row.get('paper_id') or '').strip()
+        if paper_id:
+            evidence_by_paper[paper_id].append(row)
+    for paper_id, rows in evidence_by_paper.items():
+        values = []
+        for row in rows:
+            try:
+                value = float(row.get('credence'))
+            except Exception:
+                continue
+            values.append(value)
+        if values:
+            credence_means[paper_id] = round(sum(values) / len(values), 3)
+
+    ordered_credences = sorted(credence_means.values())
+
+    def credence_percentile(value):
+        if value is None or not ordered_credences:
+            return None
+        rank = sum(1 for item in ordered_credences if item <= value)
+        return round((100.0 * rank) / len(ordered_credences), 1)
+
+    paper_nodes = {
+        str(node.get('paper_id') or '').strip(): node
+        for node in (argumentation.get('paper_nodes') or [])
+        if str(node.get('paper_id') or '').strip()
+    }
+    claim_nodes_by_paper = defaultdict(list)
+    for node in (argumentation.get('claim_nodes') or []):
+        paper_id = str(node.get('paper_id') or '').strip()
+        if paper_id:
+            claim_nodes_by_paper[paper_id].append(node)
+
+    challenge_counters = defaultdict(Counter)
+    for attack in (argumentation.get('attack_examples') or []):
+        target_paper_id = str(attack.get('target_paper_id') or '').strip()
+        source_paper_id = str(attack.get('source_paper_id') or '').strip()
+        if target_paper_id and source_paper_id and target_paper_id != source_paper_id:
+            challenge_counters[target_paper_id][source_paper_id] += 1
+
+    def paper_ref_rows(counter):
+        rows = []
+        for paper_id, link_count in counter.items():
+            article = article_by_id.get(paper_id) or {}
+            rows.append({
+                'paper_id': paper_id,
+                'title': article.get('title') or paper_id,
+                'year': article.get('year'),
+                'primary_topic': article.get('primary_topic') or '',
+                'link_count': int(link_count or 0),
+            })
+        rows.sort(key=lambda row: (-row['link_count'], row['title']))
+        return rows
+
+    details = {}
+    for paper_id in paper_ids:
+        article = article_by_id.get(paper_id) or {}
+        accepted = accepted_rows.get(paper_id) or {}
+        science_writer = lifecycle['science_writer'].get(paper_id) or {}
+        pnu = lifecycle['pnu'].get(paper_id) or {}
+        structured_claim = lifecycle['structured_claims'].get(paper_id) or {}
+        measurement_inventory = safe_json_loads(accepted.get('measurement_inventory'), []) or []
+        instrument_inventory = safe_json_loads(accepted.get('instrument_inventory'), []) or []
+        sensor_inventory = safe_json_loads(accepted.get('sensor_inventory'), []) or []
+        pnu_page_refs = safe_json_loads(pnu.get('page_refs_json'), []) or []
+        pnu_page_image_paths = [exportable_path(path) for path in (safe_json_loads(pnu.get('page_image_paths_json'), []) or []) if str(path or '').strip()]
+        pnu_panel_basis = compact_panel_basis_rows(safe_json_loads(pnu.get('panel_basis_json'), []) or [])
+
+        summary_sections = extract_science_summary_sections(accepted.get('science_writer_summary'))
+        top_claim_rows = sorted(
+            evidence_by_paper.get(paper_id) or [],
+            key=lambda row: (
+                -(int(row.get('support_count') or 0)),
+                int(row.get('attack_count') or 0),
+                -(float(row.get('credence') or 0) if row.get('credence') not in (None, '') else 0.0),
+            ),
+        )[:8]
+
+        support_counter = Counter()
+        attack_counter = Counter(challenge_counters.get(paper_id) or {})
+        support_edge_count = 0
+        attack_edge_count = 0
+        for claim_node in claim_nodes_by_paper.get(paper_id) or []:
+            support_edge_count += int(claim_node.get('incoming_support_count') or 0)
+            attack_edge_count += int(claim_node.get('incoming_attack_count') or 0)
+            for edge in claim_node.get('top_supports') or []:
+                source_paper_id = str(edge.get('source_paper_id') or '').strip()
+                if source_paper_id and source_paper_id != paper_id:
+                    support_counter[source_paper_id] += 1
+            for edge in claim_node.get('top_attacks') or []:
+                source_paper_id = str(edge.get('source_paper_id') or '').strip()
+                if source_paper_id and source_paper_id != paper_id:
+                    attack_counter[source_paper_id] += 1
+
+        mean_credence = credence_means.get(paper_id)
+        paper_node = paper_nodes.get(paper_id) or {}
+        article_theories = []
+        for value in (article.get('theories') or []) + list(paper_node.get('theories') or []):
+            label = clean_topic_candidate(value)
+            if label and label not in article_theories:
+                article_theories.append(label)
+        article_constructs = []
+        for value in article.get('constructs') or []:
+            label = clean_topic_candidate(value)
+            if label and label not in article_constructs:
+                article_constructs.append(label)
+        article_instruments = []
+        for value in article.get('instruments') or []:
+            label = clean_topic_candidate(value)
+            if label and label not in article_instruments:
+                article_instruments.append(label)
+        details[paper_id] = {
+            'paper_id': paper_id,
+            'article_meta': {
+                'title': article.get('title') or paper_id,
+                'year': article.get('year'),
+                'doi': article.get('doi') or '',
+                'article_type': article.get('article_type') or '',
+                'primary_topic': article.get('primary_topic') or '',
+                'sample_n': article.get('sample_n'),
+                'venue': article.get('venue') or '',
+                'authors': list(article.get('authors') or []),
+                'apa_citation': article.get('apa_citation') or '',
+                'main_conclusion': article.get('main_conclusion') or '',
+            },
+            'theories': article_theories,
+            'constructs': article_constructs,
+            'instruments': article_instruments,
+            'science_summary': {
+                'core_finding': summary_sections.get('Core Finding') or structured_claim.get('core_finding_text') or article.get('main_conclusion') or '',
+                'methods_and_design': summary_sections.get('Methods & Design') or clean_rich_text(accepted.get('methods_surface_summary')),
+                'key_statistics': summary_sections.get('Key Statistics') or '',
+                'design_implications': summary_sections.get('Design Implications') or '',
+                'limitations': summary_sections.get('Limitations & Honest Uncertainty') or '',
+                'gap_and_door': summary_sections.get('The Gap & The Door') or '',
+                'word_count': int(science_writer.get('word_count') or 0),
+                'summary_source_modality': science_writer.get('summary_source_modality') or accepted.get('source_modality') or '',
+                'page_image_policy': science_writer.get('page_image_policy') or '',
+                'passed_verification': bool(science_writer.get('passed_verification')),
+            },
+            'atlas_reading': {
+                'core_finding_text': first_sentence_block(structured_claim.get('core_finding_text') or ''),
+                'claim_confidence': structured_claim.get('claim_confidence') or '',
+                'primary_instrument': structured_claim.get('primary_instrument') or '',
+                'outcome_vocab_name': structured_claim.get('outcome_vocab_name') or '',
+            },
+            'pnu': {
+                'status': pnu.get('pnu_status') or '',
+                'short_summary': clean_rich_text(pnu.get('pnu_short_summary_300w')),
+                'long_summary': clean_rich_text(pnu.get('pnu_long_version')),
+                'short_status': pnu.get('pnu_short_summary_status') or '',
+                'long_status': pnu.get('pnu_long_version_status') or '',
+                'panel_status': pnu.get('panel_status') or '',
+                'panel_basis_count': int(pnu.get('panel_basis_count') or 0),
+                'panel_basis': pnu_panel_basis,
+                'source_modality': pnu.get('source_modality') or '',
+                'generation_method': pnu.get('pnu_generation_method') or '',
+                'theory_mechanism_status': pnu.get('theory_mechanism_status') or '',
+                'verifier_status': pnu.get('pnu_verifier_status') or '',
+                'verifier_error_count': int(pnu.get('pnu_verifier_error_count') or 0),
+                'requires_repair': bool(pnu.get('requires_pnu_repair')),
+                'page_refs': [int(value) for value in pnu_page_refs if str(value).strip()],
+                'page_image_paths': pnu_page_image_paths,
+                'html_path': exportable_path(pnu.get('pnu_html_path')),
+                'json_path': exportable_path(pnu.get('pnu_json_path')),
+            },
+            'operationalization': {
+                'measurement_count': max(int(science_writer.get('measurement_count') or 0), len(measurement_inventory)),
+                'instrument_count': max(int(science_writer.get('instrument_count') or 0), len(instrument_inventory)),
+                'sensor_count': max(int(science_writer.get('sensor_count') or 0), len(sensor_inventory)),
+                'outcome_operationalization_count': int(science_writer.get('outcome_operationalization_count') or 0),
+                'measurement_inventory': measurement_inventory,
+                'instrument_inventory': instrument_inventory,
+                'sensor_inventory': sensor_inventory,
+                'measurement_schema': safe_json_loads(science_writer.get('measurement_schema_json'), {}) or safe_json_loads(accepted.get('measurement_schema'), {}) or {},
+            },
+            'evidence_profile': {
+                'atlas_credence_mean': mean_credence,
+                'atlas_credence_percentile': credence_percentile(mean_credence),
+                'paper_claim_count': int(paper_node.get('claim_count') or 0),
+                'support_edge_count': support_edge_count,
+                'attack_edge_count': attack_edge_count,
+                'contradiction_count': int(paper_node.get('contradiction_count') or 0),
+                'search_target_count': int(paper_node.get('search_target_count') or 0),
+                'dominant_stance': paper_node.get('dominant_stance') or '',
+            },
+            'argumentation': {
+                'claim_count': int(paper_node.get('claim_count') or 0),
+                'contradiction_count': int(paper_node.get('contradiction_count') or 0),
+                'dominant_stance': paper_node.get('dominant_stance') or '',
+                'node_qualifier': paper_node.get('node_qualifier') or '',
+                'search_target_count': int(paper_node.get('search_target_count') or 0),
+                'support_edge_count': support_edge_count,
+                'attack_edge_count': attack_edge_count,
+            },
+            'top_claims': [
+                {
+                    'finding': clean_rich_text(row.get('finding') or row.get('claim') or ''),
+                    'signal': row.get('signal') or '',
+                    'warrant': row.get('warrant') or '',
+                    'credence': row.get('credence'),
+                    'support_count': int(row.get('support_count') or 0),
+                    'attack_count': int(row.get('attack_count') or 0),
+                    'qualifier': row.get('qualifier') or '',
+                }
+                for row in top_claim_rows
+            ],
+            'visual_support_gallery': list(article.get('visual_support_gallery') or []),
+            'technical_results_table': dict(article.get('technical_results_table') or {}),
+            'related_papers': list(article.get('related_papers') or []),
+            'supporting_papers': paper_ref_rows(support_counter)[:8],
+            'contradicting_papers': paper_ref_rows(attack_counter)[:8],
+        }
+
+    return {
+        'summary': {
+            'article_count': len(details),
+            'source_kind': 'article_detail_lookup',
+            'lifecycle_db': str(LIFECYCLE_DB_PATH.relative_to(ROOT)) if LIFECYCLE_DB_PATH.exists() else '',
+            'theory_enriched_article_count': sum(1 for detail in details.values() if detail.get('theories')),
+            'short_pnu_count': sum(1 for detail in details.values() if (detail.get('pnu') or {}).get('short_summary')),
+            'long_pnu_count': sum(1 for detail in details.values() if (detail.get('pnu') or {}).get('long_summary')),
+        },
+        'details': details,
+    }
+
+
+def build_paper_pnus_payload(articles, article_details):
+    article_lookup = {
+        str(article.get('paper_id') or '').strip(): article
+        for article in articles
+        if str(article.get('paper_id') or '').strip()
+    }
+    rows = []
+    for paper_id, detail in (article_details.get('details') or {}).items():
+        article = article_lookup.get(paper_id) or {}
+        pnu = detail.get('pnu') or {}
+        operationalization = detail.get('operationalization') or {}
+        argumentation = detail.get('argumentation') or {}
+        rows.append(
+            {
+                'paper_id': paper_id,
+                'title': (detail.get('article_meta') or {}).get('title') or article.get('title') or paper_id,
+                'year': (detail.get('article_meta') or {}).get('year'),
+                'doi': (detail.get('article_meta') or {}).get('doi') or '',
+                'article_type': (detail.get('article_meta') or {}).get('article_type') or '',
+                'primary_topic': (detail.get('article_meta') or {}).get('primary_topic') or article.get('primary_topic') or '',
+                'theories': list(detail.get('theories') or []),
+                'science_summary': {
+                    'core_finding': (detail.get('science_summary') or {}).get('core_finding') or '',
+                    'methods_and_design': (detail.get('science_summary') or {}).get('methods_and_design') or '',
+                    'design_implications': (detail.get('science_summary') or {}).get('design_implications') or '',
+                    'limitations': (detail.get('science_summary') or {}).get('limitations') or '',
+                },
+                'pnu': {
+                    'status': pnu.get('status') or '',
+                    'short_summary': pnu.get('short_summary') or '',
+                    'long_summary': pnu.get('long_summary') or '',
+                    'short_status': pnu.get('short_status') or '',
+                    'long_status': pnu.get('long_status') or '',
+                    'panel_status': pnu.get('panel_status') or '',
+                    'panel_basis_count': int(pnu.get('panel_basis_count') or 0),
+                    'panel_basis': list(pnu.get('panel_basis') or []),
+                    'source_modality': pnu.get('source_modality') or '',
+                    'generation_method': pnu.get('generation_method') or '',
+                    'theory_mechanism_status': pnu.get('theory_mechanism_status') or '',
+                    'verifier_status': pnu.get('verifier_status') or '',
+                    'verifier_error_count': int(pnu.get('verifier_error_count') or 0),
+                    'requires_repair': bool(pnu.get('requires_repair')),
+                    'page_refs': list(pnu.get('page_refs') or []),
+                    'page_image_paths': list(pnu.get('page_image_paths') or []),
+                    'html_path': pnu.get('html_path') or '',
+                    'json_path': pnu.get('json_path') or '',
+                },
+                'operationalization_counts': {
+                    'measurement_count': int(operationalization.get('measurement_count') or 0),
+                    'instrument_count': int(operationalization.get('instrument_count') or 0),
+                    'sensor_count': int(operationalization.get('sensor_count') or 0),
+                },
+                'argumentation': {
+                    'claim_count': int(argumentation.get('claim_count') or 0),
+                    'contradiction_count': int(argumentation.get('contradiction_count') or 0),
+                    'dominant_stance': argumentation.get('dominant_stance') or '',
+                },
+                'supporting_paper_count': len(detail.get('supporting_papers') or []),
+                'contradicting_paper_count': len(detail.get('contradicting_papers') or []),
+            }
+        )
+    rows.sort(
+        key=lambda row: (
+            row['pnu'].get('panel_status') != 'panel_grounded',
+            row['pnu'].get('verifier_status') != 'pass',
+            row['title'],
+        )
+    )
+    return {
+        'summary': {
+            'article_count': len(rows),
+            'short_summary_count': sum(1 for row in rows if row['pnu'].get('short_summary')),
+            'long_summary_count': sum(1 for row in rows if row['pnu'].get('long_summary')),
+            'panel_grounded_count': sum(1 for row in rows if row['pnu'].get('panel_status') == 'panel_grounded'),
+            'verifier_pass_count': sum(1 for row in rows if row['pnu'].get('verifier_status') == 'pass'),
+            'papers_with_page_refs': sum(1 for row in rows if row['pnu'].get('page_refs')),
+            'papers_with_panel_basis': sum(1 for row in rows if row['pnu'].get('panel_basis_count')),
+            'source_kind': 'paper_pnu_artifacts_export',
+            'coverage_note': (
+                'This payload now exports the real V7 lifecycle PNU artifact rows, including panel grounding, '
+                'generation provenance, and page-evidence fields where they exist.'
+            ),
+            'source_files': {
+                'article_details': 'data/ka_payloads/article_details.json',
+                'lifecycle_table': 'Article_Eater pipeline_lifecycle_full.db::pnu_artifacts',
+            },
+        },
+        'papers': rows,
+    }
+
+
+def build_theories_payload(articles, topic_hierarchy, argumentation, article_details):
+    detail_lookup = article_details.get('details') or {}
+    stores = {}
+
+    def ensure_theory(name):
+        label = clean_topic_candidate(name)
+        if not label:
+            return None
+        theory_id = slugify(label)
+        if not theory_id:
+            return None
+        existing = stores.get(theory_id)
+        if existing is None:
+            existing = {
+                'id': theory_id,
+                'name': label,
+                'paper_ids': set(),
+                'topic_ids': set(),
+                'cluster_ids': set(),
+                'representative_papers': [],
+                'topic_links': [],
+                'debate_clusters': [],
+                'related_counter': Counter(),
+                'primary_topic_counter': Counter(),
+                'pnu_examples': [],
+                'support_edge_count': 0,
+                'attack_edge_count': 0,
+            }
+            stores[theory_id] = existing
+        elif existing['name'].islower() and any(ch.isupper() for ch in label):
+            existing['name'] = label
+        return existing
+
+    for article in articles:
+        paper_id = str(article.get('paper_id') or '').strip()
+        detail = detail_lookup.get(paper_id) or {}
+        paper_theories = []
+        for value in (detail.get('theories') or article.get('theories') or []):
+            label = clean_topic_candidate(value)
+            if label and label not in paper_theories:
+                paper_theories.append(label)
+        paper_ref = {
+            'paper_id': paper_id,
+            'title': article.get('title') or paper_id,
+            'year': article.get('year'),
+            'primary_topic': article.get('primary_topic') or '',
+            'claim_count': int(article.get('claim_count') or 0),
+        }
+        pnu_short = ((detail.get('pnu') or {}).get('short_summary') or '')
+        support_edge_count = int((detail.get('argumentation') or {}).get('support_edge_count') or 0)
+        attack_edge_count = int((detail.get('argumentation') or {}).get('attack_edge_count') or 0)
+        for label in paper_theories:
+            store = ensure_theory(label)
+            if store is None:
+                continue
+            store['paper_ids'].add(paper_id)
+            store['representative_papers'].append(paper_ref)
+            if article.get('primary_topic'):
+                store['primary_topic_counter'][article['primary_topic']] += 1
+            if pnu_short and len(store['pnu_examples']) < 4:
+                store['pnu_examples'].append(
+                    {
+                        'paper_id': paper_id,
+                        'title': article.get('title') or paper_id,
+                        'short_summary': compact_text(pnu_short, 240),
+                    }
+                )
+            store['support_edge_count'] += support_edge_count
+            store['attack_edge_count'] += attack_edge_count
+
+    for topic in topic_hierarchy.get('topics') or []:
+        topic_theories = []
+        for value in topic.get('theories') or []:
+            label = clean_topic_candidate(value)
+            if label and label not in topic_theories:
+                topic_theories.append(label)
+        topic_ref = {
+            'topic_id': topic.get('id') or '',
+            'label': topic.get('label') or topic.get('name') or humanize(topic.get('id') or ''),
+            'paper_count': int(topic.get('paper_count') or 0),
+        }
+        for label in topic_theories:
+            store = ensure_theory(label)
+            if store is None:
+                continue
+            if topic_ref['topic_id'] not in store['topic_ids']:
+                store['topic_ids'].add(topic_ref['topic_id'])
+                store['topic_links'].append(topic_ref)
+            for sibling in topic_theories:
+                if sibling != label:
+                    store['related_counter'][sibling] += 1
+
+    for cluster in argumentation.get('debate_clusters') or []:
+        cluster_theories = []
+        for value in cluster.get('theories') or []:
+            label = clean_topic_candidate(value)
+            if label and label not in cluster_theories:
+                cluster_theories.append(label)
+        cluster_ref = {
+            'cluster_id': cluster.get('cluster_id') or '',
+            'paper_count': int(cluster.get('paper_count') or 0),
+            'theories': list(cluster_theories),
+        }
+        for label in cluster_theories:
+            store = ensure_theory(label)
+            if store is None:
+                continue
+            if cluster_ref['cluster_id'] not in store['cluster_ids']:
+                store['cluster_ids'].add(cluster_ref['cluster_id'])
+                store['debate_clusters'].append(cluster_ref)
+            for sibling in cluster_theories:
+                if sibling != label:
+                    store['related_counter'][sibling] += 2
+
+    theory_rows = []
+    for store in stores.values():
+        store['representative_papers'].sort(
+            key=lambda row: (-(row.get('claim_count') or 0), str(row.get('year') or ''), row['paper_id'])
+        )
+        store['topic_links'].sort(key=lambda row: (-row['paper_count'], row['label']))
+        store['debate_clusters'].sort(key=lambda row: (-row['paper_count'], row['cluster_id']))
+        related_rows = []
+        for related_name, weight in store['related_counter'].most_common(8):
+            related = ensure_theory(related_name)
+            if related is None or related['id'] == store['id']:
+                continue
+            related_rows.append(
+                {
+                    'id': related['id'],
+                    'name': related['name'],
+                    'weight': int(weight),
+                }
+            )
+        theory_rows.append(
+            {
+                'id': store['id'],
+                'name': store['name'],
+                'article_count': len(store['paper_ids']),
+                'topic_count': len(store['topic_ids']),
+                'debate_cluster_count': len(store['cluster_ids']),
+                'paper_ids': sorted(store['paper_ids']),
+                'representative_papers': store['representative_papers'][:8],
+                'topic_links': store['topic_links'][:8],
+                'debate_clusters': store['debate_clusters'][:8],
+                'primary_topics': [
+                    {'label': label, 'count': count}
+                    for label, count in store['primary_topic_counter'].most_common(8)
+                ],
+                'related_theories': related_rows,
+                'pnu_examples': store['pnu_examples'][:4],
+                'evidence_profile': {
+                    'support_edge_count': int(store['support_edge_count']),
+                    'attack_edge_count': int(store['attack_edge_count']),
+                },
+            }
+        )
+
+    theory_rows.sort(key=lambda row: (-row['article_count'], row['name']))
+    return {
+        'summary': {
+            'theory_count': len(theory_rows),
+            'article_link_count': sum(row['article_count'] for row in theory_rows),
+            'debated_theory_count': sum(1 for row in theory_rows if row['debate_cluster_count']),
+            'topic_linked_theory_count': sum(1 for row in theory_rows if row['topic_count']),
+            'source_kind': 'soft_rebuild_theory_index',
+            'coverage_note': (
+                'Derived from article labels, debate clusters, and topic hierarchy. '
+                'The upstream theory-mechanism packets exist but are currently empty, so this export is intentionally descriptive rather than inferential.'
+            ),
+            'source_files': {
+                'articles': 'data/ka_payloads/articles.json',
+                'article_details': 'data/ka_payloads/article_details.json',
+                'argumentation': 'data/ka_payloads/argumentation.json',
+                'topic_hierarchy': 'data/ka_payloads/topic_hierarchy.json',
+            },
+        },
+        'theories': theory_rows,
+    }
+
+
+def build_mechanisms_payload():
+    manifest = load_json(OUT / 'pnus.json', {})
+    frameworks = manifest.get('frameworks') or []
+    cross_framework = manifest.get('cross_framework') or []
+    mechanisms = []
+    for framework in frameworks:
+        framework_id = framework.get('id') or slugify(framework.get('name') or 'framework')
+        framework_name = framework.get('name') or framework_id
+        for mechanism in framework.get('mechanisms') or []:
+            mechanisms.append(
+                {
+                    'id': mechanism.get('id') or '',
+                    'name': mechanism.get('name') or '',
+                    'framework_id': framework_id,
+                    'framework_name': framework_name,
+                    'frameworks': [framework_name],
+                    'kind': 'framework_specific',
+                    'maturity': mechanism.get('maturity') or '',
+                    'temporal': mechanism.get('temporal') or '',
+                    'file': mechanism.get('file') or '',
+                    'exists': bool(mechanism.get('exists')),
+                    'word_count': int(mechanism.get('word_count') or 0),
+                }
+            )
+    for mechanism in cross_framework:
+        mechanisms.append(
+            {
+                'id': mechanism.get('id') or '',
+                'name': mechanism.get('name') or '',
+                'framework_id': 'cross_framework',
+                'framework_name': 'Cross-Framework',
+                'frameworks': list(mechanism.get('frameworks') or []),
+                'kind': 'cross_framework',
+                'maturity': mechanism.get('maturity') or '',
+                'temporal': mechanism.get('temporal') or '',
+                'file': mechanism.get('file') or '',
+                'exists': bool(mechanism.get('exists')),
+                'word_count': int(mechanism.get('word_count') or 0),
+            }
+        )
+    mechanisms.sort(key=lambda row: (row['framework_name'], row['name']))
+    return {
+        'summary': {
+            'mechanism_count': len(mechanisms),
+            'framework_count': len(frameworks),
+            'cross_framework_count': len(cross_framework),
+            'source_kind': 'mechanism_profile_manifest',
+            'coverage_note': (
+                'This is the canonical mechanism inventory flattened from the existing PNU mechanism manifest. '
+                'It is not yet the paper-grounded mechanism-chain export promised in the journey specifications.'
+            ),
+            'readiness': (manifest.get('summary') or {}).get('readiness') or {},
+        },
+        'source': manifest.get('source') or {},
+        'mechanisms': mechanisms,
+    }
+
+
 def _write_optional_payload_copy(source_path, output_name):
     source = Path(source_path)
     if not source.exists():
@@ -3688,7 +4538,12 @@ def main():
     )
     dashboard = build_dashboard(articles, evidence)
     json_status = build_json_status(articles)
+    topic_crosswalk = build_topic_crosswalk_payload(topic_hierarchy)
     argumentation = build_argumentation_payload()
+    article_details = build_article_details_payload(articles, evidence, argumentation)
+    paper_pnus = build_paper_pnus_payload(articles, article_details)
+    theories = build_theories_payload(articles, topic_hierarchy, argumentation, article_details)
+    mechanisms = build_mechanisms_payload()
     annotations = build_annotations_payload()
     interpretation = build_interpretation_payload()
     layers = build_layers_summary(argumentation, annotations, interpretation)
@@ -3714,7 +4569,12 @@ def main():
     (OUT / 'articles.json').write_text(json.dumps({'articles': articles}, indent=2))
     (OUT / 'dashboard.json').write_text(json.dumps({'dashboard': dashboard}, indent=2))
     (OUT / 'json_status.json').write_text(json.dumps(json_status, indent=2))
+    (OUT / 'article_details.json').write_text(json.dumps(article_details, indent=2))
+    (OUT / 'paper_pnus.json').write_text(json.dumps(paper_pnus, indent=2))
+    (OUT / 'theories.json').write_text(json.dumps(theories, indent=2))
+    (OUT / 'mechanisms.json').write_text(json.dumps(mechanisms, indent=2))
     (OUT / 'topic_hierarchy.json').write_text(json.dumps(topic_hierarchy, indent=2))
+    (OUT / 'topic_crosswalk.json').write_text(json.dumps(topic_crosswalk, indent=2))
     (OUT / 'topic_repair_queue.json').write_text(json.dumps({'repair_queue': topic_hierarchy.get('repair_queue') or []}, indent=2))
     (OUT / 'topic_exclusion_queue.json').write_text(json.dumps({'exclusion_queue': topic_hierarchy.get('exclusion_queue') or []}, indent=2))
     if ontology_payload and membership_payload:

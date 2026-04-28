@@ -119,6 +119,8 @@ def _get_secret() -> str:
 SECRET_KEY = _get_secret()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 bearer_scheme = HTTPBearer(auto_error=False)
+ARTICLE_MODULE_LOADED = False
+ARTICLE_MODULE_BACKEND = "unavailable"
 
 
 def _hash_token(token: str) -> str:
@@ -432,14 +434,15 @@ def init_db():
     if not instr:
         uid = "instructor_kirsh"
         email = "dkirsh@ucsd.edu"
-        ph = pwd_context.hash("atlas2026")
+        bootstrap_password = os.getenv("KA_BOOTSTRAP_INSTRUCTOR_PASSWORD", "change-me-local-only")
+        ph = pwd_context.hash(bootstrap_password)
         now = datetime.now(timezone.utc).isoformat()
         db.execute("""INSERT OR IGNORE INTO users
             (user_id,email,first_name,last_name,role,password_hash,status,created_at,approved_at)
             VALUES (?,?,?,?,?,?,?,?,?)""",
             (uid, email, "David", "Kirsh", "instructor", ph, "approved", now, now))
         print("[KA-AUTH] Seeded instructor account")
-        print("[KA-AUTH] Change the instructor password immediately via POST /auth/change-password")
+        print("[KA-AUTH] Set KA_BOOTSTRAP_INSTRUCTOR_PASSWORD before first run, or change the instructor password immediately via POST /auth/change-password")
 
     db.commit()
     db.close()
@@ -954,8 +957,17 @@ def manual_reset_link(req: ManualResetLinkRequest, user=Depends(require_instruct
 # ── HEALTH CHECK
 @app.get("/health")
 def health():
-    return {"status": "ok", "server": "Knowledge Atlas Auth", "version": "1.1.0",
-            "modules": ["auth", "articles"]}
+    modules = ["auth"]
+    if ARTICLE_MODULE_LOADED:
+        modules.append("articles")
+    return {
+        "status": "ok",
+        "server": "Knowledge Atlas Auth",
+        "version": "1.1.0",
+        "modules": modules,
+        "article_module_loaded": ARTICLE_MODULE_LOADED,
+        "article_classifier_backend": ARTICLE_MODULE_BACKEND,
+    }
 
 # ════════════════════════════════════════════════
 # ARTICLE SUBMISSION MODULE
@@ -971,9 +983,13 @@ try:
     )
     app.include_router(ka_article_endpoints.router)
     app.include_router(ka_article_endpoints.student_router)
+    ARTICLE_MODULE_LOADED = True
+    ARTICLE_MODULE_BACKEND = getattr(ka_article_endpoints, "CLASSIFIER_BACKEND", "unknown")
     print("[KA-AUTH] Article submission module loaded ✓")
     print("[KA-AUTH] Student endpoints loaded ✓ (/api/student/fetch-abstracts, /title-only, /classify-one)")
 except ImportError as e:
+    ARTICLE_MODULE_LOADED = False
+    ARTICLE_MODULE_BACKEND = "unavailable"
     print(f"[KA-AUTH] Article submission module not available: {e}")
     print("[KA-AUTH] Server running with auth-only endpoints")
 

@@ -38,8 +38,13 @@
     .switch button.active{background:var(--amber-dark);color:#fff;border-color:var(--amber-dark);}
     .switch button:focus-visible{outline:2px solid var(--navy);outline-offset:2px;}
   </style>
+<script src="../ka_canonical_navbar.js" defer></script>
+<script src="../ka_user_type.js" defer></script>
 </head>
-<body>
+<body data-ka-regime="160sp">
+<div id="ka-navbar-slot"></div>
+<div id="ka-breadcrumb-slot"></div>
+
 
 <nav>
   <a href="ka_schedule.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;">
@@ -62,8 +67,8 @@
     <a href="week2_exercises.html" class="nav-link">A0</a>
     <a href="week3_agenda.html" class="nav-link">A1</a>
     <a href="ka_track1_tagging.html" class="nav-link">Track 1</a>
-    <a href="ka_track2_pipeline.html" class="nav-link">Track 2</a>
-    <a href="ka_track3_vr.html" class="nav-link">Track 3</a>
+    <a href="track2_hub.html" class="nav-link">Track 2</a>
+    <a href="ka_track3_hub.html" class="nav-link">Track 3</a>
     <a href="ka_track4_ux.html" class="nav-link">Track 4</a>
   </div>
   <div class="nav-right">
@@ -142,8 +147,8 @@
   };
   var TRACK_PAGES = {
     '1':'ka_track1_tagging.html',
-    '2':'ka_track2_pipeline.html',
-    '3':'ka_track3_vr.html',
+    '2':'track2_hub.html',
+    '3':'ka_track3_hub.html',
     '4':'ka_track4_ux.html'
   };
 

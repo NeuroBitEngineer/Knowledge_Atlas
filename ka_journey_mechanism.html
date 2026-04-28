@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mechanism layer — Knowledge Atlas complicated surfaces</title>
+<meta name="description" content="Mechanism layer: what this page displays, who needs it and why, the design challenge, the naive solution in place now, and per-user-type critique prompts.">
+<script src="ka_canonical_navbar.js" defer></script>
+<script src="ka_user_type.js" defer></script>
+<script src="ka_journey_surface.js" defer></script>
+<script src="ka_data_adapter.js"></script>
+<link rel="stylesheet" href="ka_journey_page.css">
+<style>
+  .j-live-loading,.j-live-error{padding:14px 16px;border:1px solid #D9D2C3;border-radius:10px;background:#fff;color:#5A5A5A}
+  .j-live-error{background:#FFF3F0;border-color:#E5B2A7;color:#842029}
+  .j-live-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:12px 0 16px}
+  .j-live-metric{background:#F9F6F0;border:1px solid #E0D8CC;border-radius:10px;padding:13px 14px}
+  .j-live-metric .label{font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;color:#768680;font-weight:700;margin-bottom:4px}
+  .j-live-metric .value{font-size:1.2rem;font-weight:700;color:#1C3D3A}
+  .j-live-metric .sub{font-size:.82rem;color:#6B6B6B;margin-top:4px;line-height:1.45}
+  .j-live-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:16px}
+  .j-live-block{background:#F9F6F0;border:1px solid #E0D8CC;border-radius:10px;padding:14px 15px}
+  .j-live-block h3{font-size:1rem;color:#1C3D3A;margin-bottom:8px}
+  .j-live-block > p{font-size:.88rem;color:#5A5A5A;line-height:1.55;margin-bottom:10px}
+  .j-live-list{display:grid;gap:10px}
+  .j-live-card{background:#fff;border:1px solid #E0D8CC;border-radius:10px;padding:12px 13px}
+  .j-live-card h4{font-size:.94rem;color:#1C3D3A;margin-bottom:4px}
+  .j-live-meta{font-size:.8rem;color:#6B6B6B;margin-bottom:6px;line-height:1.4}
+  .j-focus-note{background:#FFF8EC;border:1px solid #F1D7A8;border-radius:10px;padding:12px 14px;margin:0 0 16px;color:#5C4B24}
+  .j-focus-note a{color:#2A7868;text-decoration:none;font-weight:600}
+  .j-focus-note a:hover{color:#E8872A}
+  .j-live-chip-row{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+  .j-live-chip{display:inline-flex;align-items:center;padding:4px 9px;border-radius:999px;background:#fff;border:1px solid #E0D8CC;color:#1C3D3A;font-size:.77rem}
+  .j-live-card a{color:#2A7868;text-decoration:none}
+  .j-live-card a:hover{color:#E8872A}
+  @media (max-width: 920px){.j-live-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body data-ka-regime="global" data-ka-active="" data-j-group="complicated">
+<div id="ka-navbar-slot"></div>
+
+<div class="j-shell">
+
+  <aside class="j-sidebar" id="j-sidebar-slot" aria-label="Complicated-surface journey index"></aside>
+
+  <main class="j-main">
+
+    <div class="j-header">
+      <div class="eyebrow">Complicated journey surface · Layer E · Mechanisms &amp; theories</div>
+      <h1>Mechanism layer</h1>
+      <div class="j-meta">
+        <span><b>Roles served</b> researcher, practitioner, 160_student</span>
+        <span><b>Current status</b> <span class="status-pill naive">naive</span></span>
+        <span><b>Complexity tier</b> Medium-high — cross-scale mechanism chains</span>
+      </div>
+    </div>
+
+
+    <aside class="j-t4-banner" style="background:#EFECFA;border-left:4px solid #4A3A8E;border-radius:6px;padding:12px 16px;margin:0 0 18px 0;font-size:0.9rem;color:#2A2250;line-height:1.5">
+      <b style="color:#4A3A8E">Track 4 redesign target.</b> The page exists at a placeholder level; redesign is open. Track 4 owns this page&apos;s redesign through seven graded stages: heuristic audit (T4.a), scenario walkthrough (T4.b), usability pilot (T4.c), severity rubric (T4.d), reproducibility check (T4.e), mid-fidelity redesign (T4.f), and final report (T4.g). Every track may read the page; only Track 4 proposes new designs. The full deliverable chain lives at <a href="160sp/ka_track4_hub.html" style="color:#4A3A8E;font-weight:600">Track 4 hub, Region 3.5</a>.
+    </aside>
+
+    <div class="j-siblings" id="j-siblings-slot"></div>
+
+    <div class="j-section">
+      <h2><span class="h2-icon">⛓</span><span class="h2-text">Current mechanism inventory</span><span class="h2-hint">what the live payload already contains</span></h2>
+      <p>This preview is drawn from the current public payloads. It does not solve the full design problem, but it does show what the Atlas already knows about frameworks, cross-framework mechanisms, and the theories under the greatest argumentative pressure.</p>
+      <div id="j-mechanism-live" class="j-live-loading">Loading current mechanism inventory…</div>
+    </div>
+
+    <div class="j-section">
+      <h2><span class="h2-icon">◧</span><span class="h2-text">What this page displays</span><span class="h2-hint">the information on offer</span></h2>
+    <p>The mechanism layer shows the causal pathways linking architectural and environmental features to psychological and physiological outcomes. Pathways are chains of intermediate states: for example, <em>fractal pattern in visual field → parasympathetic activation → reduced cortisol → lower self-reported stress</em>. Each link in the chain is warranted by papers in the corpus.</p>
+    <p>Mechanisms span multiple levels of analysis — retinal, neural, cognitive, affective, behavioural — and pathways that are coherent at one scale may be speculative at another. The viewer must show the scale of each link and whether the link is supported by direct measurement, by theoretical inference, or by analogy.</p>
+    <p>Unlike the Bayesian network (which <em>quantifies</em> dependencies) or the epistemic network (which shows <em>evidential</em> relations), the mechanism layer shows <em>constitutive</em> causal structure. The three representations are sibling views on the same underlying corpus but answer different questions.</p>
+    </div>
+
+    <div class="j-section">
+      <h2><span class="h2-icon">☰</span><span class="h2-text">Who needs this, and why</span><span class="h2-hint">functions served, per user type</span></h2>
+      <ul class="role-list">
+      <li><span class="role-label">Public visitor</span>A curious visitor can follow a chain to learn the science; the page must be legible at this level without oversimplifying.</li>
+      <li><span class="role-label">COGS 160 student</span>Track 1 students use mechanisms to anchor their tagging schema. Track 3 students operationalise a single mechanism chain in VR.</li>
+      <li><span class="role-label">Researcher</span>To propose or refute a mediating-variable hypothesis — the mechanism layer is the natural place to see whether a proposed mediator is already a recognised node.</li>
+      <li><span class="role-label">Practitioner</span>To translate a design intervention at feature-level into a plausible outcome-level effect via the intervening states. Practitioners want to know the <em>why</em>, not just the <em>what</em>.</li>
+      <li><span class="role-label">Administrator</span>To detect mechanism chains with gaps — links that no paper in the corpus actually supports.</li>
+      </ul>
+    </div>
+
+    <div class="j-section">
+      <h2><span class="h2-icon">△</span><span class="h2-text">Why this page is hard to design</span><span class="h2-hint">the challenges</span></h2>
+      <ol>
+      <li><b>Cross-scale composition.</b> A chain that goes retina → neural → cognitive → affective → behavioural passes through at least four disciplines. The viewer must communicate the scale jump, because a chain whose scale is hidden is one whose weakest link is also hidden.</li>
+      <li><b>Directness of support.</b> A link supported by a direct measurement is different from a link supported only by theoretical analogy. The page must mark the difference and avoid suggesting uniform warrant.</li>
+      <li><b>Alternative mechanisms.</b> Most outcome-feature pairs have more than one proposed mechanism. The page must show the competitors, not the winner, and must indicate when the evidence decides between them.</li>
+      <li><b>Granularity.</b> Mechanisms can be collapsed (A → Z) or expanded (A → B → C → … → Z). The user needs to pick the granularity they are reading at.</li>
+      <li><b>Citation density.</b> A four-link chain typically cites 8–20 papers. The viewer must make that count visible without making the page a bibliography.</li>
+      </ol>
+    </div>
+
+    <div class="j-section j-section-naive">
+      <h2><span class="h2-icon">✗</span><span class="h2-text">The simple naive solution in place now</span><span class="h2-hint">what you'll actually see</span></h2>
+      <div class="j-naive">
+        <span class="j-naive-label">naive — the current implementation</span>
+        <div class="j-naive-body"><p>The current page renders each mechanism as a flat linear diagram with nodes and unlabelled arrows. Hover reveals the name of the mediator; there is no scale marker, no directness marker, no alternative-mechanism display, and no citation listing per link.</p></div>
+      </div>
+      <div class="j-naive-why"><b>Why this is inadequate.</b> A researcher reading the naive diagram cannot tell whether a given link is supported by ten direct studies or by one theoretical analogy; a practitioner cannot tell which link in the chain would be the most leverage-bearing design target; a student cannot tell which mechanism is the consensus one and which is the minority view. The page has the shape of a mechanism view but not the content.</div>
+    </div>
+
+    <div class="j-section">
+      <h2><span class="h2-icon">✎</span><span class="h2-text">Critique it from each user's perspective</span><span class="h2-hint">who is and is not served by the naive solution</span></h2>
+      <p>For each user type below, write one to three sentences: what in the naive solution works for that user, what fails, and what one thing a redesign should change first. Your drafts save to your browser; copy them into your T4.a or T4.f workspace when you are ready.</p>
+      <div class="j-critique">
+        <span class="j-critique-label">critique by user type</span>
+      <div class="role-crit">
+        <div class="rc-head">Public visitor</div>
+        <div style="font-size:0.82rem;color:#6B6B6B;margin-bottom:6px">a scientifically-curious layperson who arrived from a link</div>
+        <textarea id="crit_public_visitor" placeholder="What works for this user, what fails, and one thing a redesign should change first."></textarea>
+      </div>
+      <div class="role-crit">
+        <div class="rc-head">COGS 160 student</div>
+        <div style="font-size:0.82rem;color:#6B6B6B;margin-bottom:6px">a student working through one of the four tracks</div>
+        <textarea id="crit_160_student" placeholder="What works for this user, what fails, and one thing a redesign should change first."></textarea>
+      </div>
+      <div class="role-crit">
+        <div class="rc-head">Researcher</div>
+        <div style="font-size:0.82rem;color:#6B6B6B;margin-bottom:6px">a working scientist (graduate student, postdoc, faculty) using the Atlas to triage literature</div>
+        <textarea id="crit_researcher" placeholder="What works for this user, what fails, and one thing a redesign should change first."></textarea>
+      </div>
+      <div class="role-crit">
+        <div class="rc-head">Practitioner</div>
+        <div style="font-size:0.82rem;color:#6B6B6B;margin-bottom:6px">an architect, designer, or clinician looking for actionable evidence</div>
+        <textarea id="crit_practitioner" placeholder="What works for this user, what fails, and one thing a redesign should change first."></textarea>
+      </div>
+      <div class="role-crit">
+        <div class="rc-head">Administrator</div>
+        <div style="font-size:0.82rem;color:#6B6B6B;margin-bottom:6px">a course or site admin doing quality control</div>
+        <textarea id="crit_admin" placeholder="What works for this user, what fails, and one thing a redesign should change first."></textarea>
+      </div>
+        <button type="button" class="save-btn" onclick="saveCritique('mechanism')">Save critiques (to browser only)</button>
+        <span class="j-status" id="j-crit-status">Saved.</span>
+      </div>
+    </div>
+
+    <div class="j-section">
+      <h2><span class="h2-icon">☷</span><span class="h2-text">Data files and endpoints to populate this page</span><span class="h2-hint">what a real implementation would call</span></h2>
+      <ul class="file-list">
+      <li><span class="file-type data">data</span><a>data/ka_payloads/mechanisms.json</a><span class="file-desc">Mechanism records: <code>{id, topic_bundle, chain: [{node, scale, directness, warrant_ids}], alternatives: [id]}</code>.</span></li>
+      <li><span class="file-type data">data</span><a>data/ka_payloads/mechanism_nodes.json</a><span class="file-desc">The node taxonomy, with scale labels (retinal, neural, cognitive, affective, behavioural) and plain-language glosses.</span></li>
+      <li><span class="file-type lib">lib</span><a>ka_mechanism_render.js</a><span class="file-desc">Chain renderer; currently shows flat node-link chains; needs scale and directness encoding.</span></li>
+      <li><span class="file-type missing">missing</span><a>alternative-mechanism crosswalk</a><span class="file-desc">Per-pair, the list of competing mechanisms. Partially populated from the crosswalk table but not exposed in the payload pipeline.</span></li>
+      <li><span class="file-type api">api</span><a>/api/mechanism/{id}/warrants</a><span class="file-desc">Returns the warrants underlying every link in a named mechanism. Currently returns all warrants at once; should paginate by link.</span></li>
+      </ul>
+    </div>
+
+    <div class="j-section" style="background:#F9F5EE">
+      <h2><span class="h2-icon">→</span><span class="h2-text">Status and next steps</span></h2>
+      <p>The mechanism layer is tightly coupled to the theory layer (each mechanism is predicted by some theory) and to the BN (each mechanism's quantified version is a subgraph of the BN). Design changes here must be checked against both.</p>
+    </div>
+
+  </main>
+
+</div>
+
+<script>
+function mechanismEsc(value) {
+  return String(value == null ? '' : value).replace(/[&<>"']/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;', "'":'&#39;'}[c])
+  );
+}
+
+function mechanismMetric(label, value, sub) {
+  return `
+    <div class="j-live-metric">
+      <div class="label">${mechanismEsc(label)}</div>
+      <div class="value">${mechanismEsc(value)}</div>
+      <div class="sub">${mechanismEsc(sub || '')}</div>
+    </div>
+  `;
+}
+
+function mechanismJourneyHref(path, params = {}) {
+  const query = new URLSearchParams();
+  Object.entries(params || {}).forEach(([key, value]) => {
+    const text = String(value || '').trim();
+    if (text) query.set(key, text);
+  });
+  const suffix = query.toString();
+  return suffix ? `${path}?${suffix}` : path;
+}
+
+function hydrateMechanismRuntimeLinks(root) {
+  (root || document).querySelectorAll('[data-runtime-link]').forEach(node => {
+    node.setAttribute('href', node.getAttribute('data-runtime-link'));
+  });
+}
+
+async function renderMechanismInventory() {
+  const mount = document.getElementById('j-mechanism-live');
+  if (!mount) return;
+
+  try {
+    let mechanismPayload;
+    let theoryPayload;
+    if (window.KA_DATA_ADAPTER) {
+      [mechanismPayload, theoryPayload] = await Promise.all([
+        window.KA_DATA_ADAPTER.loadPayload('mechanisms', { summary: {}, mechanisms: [] }),
+        window.KA_DATA_ADAPTER.loadPayload('theories', { summary: {}, theories: [] }),
+      ]);
+    } else {
+      const [mechanismRes, theoryRes] = await Promise.all([
+        fetch('data/ka_payloads/mechanisms.json', { cache: 'no-store' }),
+        fetch('data/ka_payloads/theories.json', { cache: 'no-store' }),
+      ]);
+      if (!mechanismRes.ok) throw new Error('mechanisms.json HTTP ' + mechanismRes.status);
+      if (!theoryRes.ok) throw new Error('theories.json HTTP ' + theoryRes.status);
+      mechanismPayload = await mechanismRes.json();
+      theoryPayload = await theoryRes.json();
+    }
+
+    const mechanisms = mechanismPayload.mechanisms || [];
+    const theories = theoryPayload.theories || [];
+    const frameworkCounts = mechanisms.reduce((acc, row) => {
+      const key = row.framework_name || 'Unclassified';
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+    const topFrameworks = Object.entries(frameworkCounts).sort((a, b) => b[1] - a[1]).slice(0, 8);
+    const featuredMechanisms = mechanisms.slice().sort((a, b) => {
+      const maturity = value => ({'How-Actually': 3, 'How-Plausibly': 2, 'How-Possibly': 1}[value] || 0);
+      const maturityGap = maturity(b.maturity) - maturity(a.maturity);
+      if (maturityGap) return maturityGap;
+      return (b.word_count || 0) - (a.word_count || 0);
+    }).slice(0, 6);
+    const theoryPressure = theories.slice().sort((a, b) => {
+      const aAttack = ((a.evidence_profile || {}).attack_edge_count || 0);
+      const bAttack = ((b.evidence_profile || {}).attack_edge_count || 0);
+      if (bAttack !== aAttack) return bAttack - aAttack;
+      return (b.article_count || 0) - (a.article_count || 0);
+    }).slice(0, 5);
+    const readiness = (mechanismPayload.summary || {}).readiness || {};
+    const params = new URLSearchParams(window.location.search);
+    const focusTheoryKey = String(params.get('theory') || '').trim().toLowerCase();
+    const fromTopic = String(params.get('from_topic') || '').trim();
+    const fromArticle = String(params.get('from_article') || '').trim();
+    const focusTheory = focusTheoryKey
+      ? theories.find(row => String(row.id || '').trim().toLowerCase() === focusTheoryKey || String(row.name || '').trim().toLowerCase() === focusTheoryKey)
+      : null;
+    const focusTopicHref = fromTopic ? mechanismJourneyHref('ka_topic_facet_view.html', { topic: fromTopic, from_article: fromArticle }) : '';
+
+    mount.innerHTML = `
+      ${focusTheory ? `
+        <div class="j-focus-note" id="j-mechanism-focus">
+          Opened from theory <a data-runtime-link="${mechanismEsc(mechanismJourneyHref('ka_home_theory.html', { theory: focusTheory.id, from_topic: fromTopic, from_article: fromArticle }))}">${mechanismEsc(focusTheory.name || focusTheory.id)}</a>. This mechanism layer is therefore carrying a theory handoff, not merely showing the generic inventory.
+          ${fromTopic ? `It arrived via topic <a data-runtime-link="${mechanismEsc(focusTopicHref)}">${mechanismEsc(fromTopic)}</a>. ` : ''}
+          ${fromArticle ? `The originating article was <a href="ka_article_view.html?id=${encodeURIComponent(fromArticle)}">${mechanismEsc(fromArticle)}</a>.` : ''}
+          <div class="j-live-chip-row" style="margin-top:10px">
+            <a class="j-live-chip" id="j-mechanism-theory-journey-link" data-runtime-link="${mechanismEsc(mechanismJourneyHref('ka_journey_theory.html', { theory: focusTheory.id, from_topic: fromTopic, from_article: fromArticle }))}">Open theory journey brief</a>
+            <a class="j-live-chip" id="j-mechanism-theory-link" data-runtime-link="${mechanismEsc(mechanismJourneyHref('ka_home_theory.html', { theory: focusTheory.id, from_topic: fromTopic, from_article: fromArticle }))}">Return to theory explorer</a>
+            ${fromTopic ? `<a class="j-live-chip" id="j-mechanism-topic-link" data-runtime-link="${mechanismEsc(focusTopicHref)}">Return to focus topic</a>` : ''}
+          </div>
+        </div>
+      ` : ''}
+      <div class="j-live-metrics">
+        ${mechanismMetric('Mechanisms', (mechanismPayload.summary || {}).mechanism_count || mechanisms.length, 'current manifest entries')}
+        ${mechanismMetric('Frameworks', (mechanismPayload.summary || {}).framework_count || 0, 'named explanatory systems')}
+        ${mechanismMetric('Cross-framework', (mechanismPayload.summary || {}).cross_framework_count || 0, 'mechanisms spanning multiple frameworks')}
+        ${mechanismMetric('Full entries', readiness.full || 0, 'entries with substantial write-ups')}
+      </div>
+
+      <div class="j-live-grid">
+        <div class="j-live-block">
+          <h3>Representative mechanisms</h3>
+          <p>${mechanismEsc((mechanismPayload.summary || {}).coverage_note || 'This is the current canonical mechanism inventory.')}</p>
+          <div class="j-live-list">
+            ${featuredMechanisms.map(row => `
+              <div class="j-live-card">
+                <h4>${mechanismEsc(row.name)}</h4>
+                <div class="j-live-meta">${mechanismEsc(row.framework_name || 'Framework pending')} · ${mechanismEsc(row.kind || 'kind pending')} · ${mechanismEsc(row.maturity || 'maturity pending')}</div>
+                <div class="j-live-meta">${mechanismEsc(row.temporal || 'Temporal scale pending')} · ${mechanismEsc(String(row.word_count || 0))} words</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="j-live-block">
+          <h3>Framework density</h3>
+          <div class="j-live-chip-row">
+            ${topFrameworks.map(([label, count]) => `<span class="j-live-chip">${mechanismEsc(label)} (${mechanismEsc(count)})</span>`).join('')}
+          </div>
+          <h3 style="margin-top:16px">Theory pressure points</h3>
+          <p>These are the theories with the heaviest current attack load. They are the places where mechanism-level redesign ought to explain disagreement most clearly.</p>
+          <div class="j-live-list">
+            ${theoryPressure.map(row => `
+              <div class="j-live-card">
+                <h4><a href="ka_home_theory.html?theory=${encodeURIComponent(row.id)}">${mechanismEsc(row.name)}</a></h4>
+                <div class="j-live-meta">${mechanismEsc(String(row.article_count || 0))} papers · ${mechanismEsc(String((row.evidence_profile || {}).support_edge_count || 0))} supports · ${mechanismEsc(String((row.evidence_profile || {}).attack_edge_count || 0))} attacks</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+    hydrateMechanismRuntimeLinks(mount);
+  } catch (error) {
+    mount.className = 'j-live-error';
+    mount.innerHTML = `Could not load the current mechanism inventory. Error: <code>${mechanismEsc(error.message || error)}</code>`;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  if (window.renderJourneySidebar) window.renderJourneySidebar('mechanism');
+  if (window.renderJourneySiblings) window.renderJourneySiblings('mechanism');
+  if (window.restoreCritique) window.restoreCritique('mechanism');
+  renderMechanismInventory();
+});
+</script>
+</body>
+</html>

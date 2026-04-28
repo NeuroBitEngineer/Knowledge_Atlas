@@ -234,6 +234,117 @@
       font-weight: 700;
     }
 
+    .public-portal-note {
+      background: #fff7e8;
+      border: 1.5px solid #e8c77d;
+      border-radius: 12px;
+      padding: 16px 18px;
+      margin-bottom: 22px;
+    }
+    .public-portal-title {
+      font-size: .82rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: #9a5a10;
+      margin-bottom: 8px;
+    }
+    .public-portal-note p {
+      font-size: .9rem;
+      color: #4b5563;
+      line-height: 1.65;
+      margin-bottom: 10px;
+      max-width: 860px;
+    }
+    .public-portal-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .public-portal-actions a,
+    .public-portal-actions button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid #d9b46b;
+      background: #fff;
+      color: #8b4e0c;
+      text-decoration: none;
+      font-size: .84rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .public-portal-actions a:hover,
+    .public-portal-actions button:hover {
+      background: #fff1d4;
+    }
+
+    .showcase-section {
+      background: #fff;
+      border: 1.5px solid #d8dde6;
+      border-radius: 14px;
+      padding: 18px 20px;
+      margin-bottom: 24px;
+    }
+    .showcase-title {
+      font-size: .82rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: #5b3c8a;
+      margin-bottom: 8px;
+    }
+    .showcase-section p {
+      font-size: .9rem;
+      color: #4b5563;
+      line-height: 1.65;
+      margin-bottom: 14px;
+      max-width: 880px;
+    }
+    .showcase-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+    .showcase-card {
+      border: 1px solid #dbe2ec;
+      border-radius: 12px;
+      padding: 14px 15px;
+      background: #f8fafc;
+    }
+    .showcase-card h3 {
+      font-size: 1rem;
+      color: #1f2937;
+      margin-bottom: 6px;
+    }
+    .showcase-card p {
+      font-size: .85rem;
+      color: #4b5563;
+      line-height: 1.55;
+      margin-bottom: 10px;
+    }
+    .showcase-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .showcase-links a {
+      display: inline-block;
+      padding: 6px 9px;
+      border-radius: 999px;
+      border: 1px solid #c9d7ea;
+      background: #fff;
+      color: #1a56a4;
+      font-size: .77rem;
+      font-weight: 700;
+      text-decoration: none;
+    }
+    .showcase-links a:hover {
+      text-decoration: underline;
+    }
+
     /* ── Resume Card ─────────────────────────────────────────────────── */
     .resume-card {
       background: linear-gradient(135deg, #002d5b 0%, #1a56a4 100%);
@@ -698,8 +809,13 @@
 .wm-bottom span { color: #F5A623; }
 </style>
 <script src="ka_config.js"></script>
+<script src="ka_canonical_navbar.js" defer></script>
+<script src="ka_user_type.js" defer></script>
 </head>
-<body>
+<body data-ka-regime="global">
+<div id="ka-navbar-slot"></div>
+<div id="ka-breadcrumb-slot"></div>
+
 
 <!-- TOP BAR -->
 <header class="top-bar">
@@ -757,6 +873,8 @@
       <a class="sidebar-link" href="160sp/ka_schedule.html">📅 Schedule</a>
       <a class="sidebar-link" href="160sp/ka_student_setup.html">🔧 Setup Guide</a>
       <a class="sidebar-link" href="ka_account_settings.html">⚙️ Account Settings</a>
+      <a class="sidebar-link" href="ka_journeys.html">🧪 GUI Workbench</a>
+      <a class="sidebar-link" href="ka_home_theory.html">🧠 Theory Explorer</a>
       <a class="sidebar-link" href="ka_instructor_login_recovery.html" id="sidebar-instructor-recovery-link" style="display:none;">🔐 Student Login Recovery</a>
       <a class="sidebar-link" href="ka_home.html">🏠 ATLAS Home</a>
     </div>
@@ -770,6 +888,70 @@
       <div class="welcome-name" id="welcome-name">Welcome to ATLAS</div>
       <div class="welcome-desc" id="welcome-desc">
         Loading your personalised workspace…
+      </div>
+    </div>
+
+    <div class="public-portal-note" id="public-portal-note" style="display:none;">
+      <div class="public-portal-title">Public workspace</div>
+      <p>
+        Visitor, Researcher, Practitioner, and Contributor views are public.
+        You may inspect this workspace before signing in, and you may switch
+        roles later. Only COGS 160 student work requires the UCSD course login
+        and the student setup path.
+      </p>
+      <div class="public-portal-actions">
+        <button type="button" id="public-sign-in-btn">Sign in for saved work</button>
+        <a href="ka_home.html">Return to home</a>
+      </div>
+    </div>
+
+    <div class="showcase-section" id="gui-showcase-section">
+      <div class="showcase-title">GUI track workbench</div>
+      <p>
+        These are the newer, more difficult Atlas surfaces: theories,
+        mechanisms, journey pages, and topic-comparison variants. They are
+        exactly the sort of pages the GUI track should criticise and redesign.
+        They are surfaced here so that they can be inspected deliberately,
+        rather than discovered by accident.
+      </p>
+      <div class="showcase-grid">
+        <article class="showcase-card">
+          <h3>Theories</h3>
+          <p>The conceptual scaffolding: the theory index and the more ambitious theory explorer page.</p>
+          <div class="showcase-links">
+            <a href="ka_theories.html">Theories index</a>
+            <a href="ka_home_theory.html">Theory explorer</a>
+          </div>
+        </article>
+        <article class="showcase-card">
+          <h3>Mechanisms</h3>
+          <p>The mechanism pages try to expose explanation rather than mere association. They are difficult, and therefore valuable.</p>
+          <div class="showcase-links">
+            <a href="ka_mechanisms.html">Mechanisms index</a>
+            <a href="ka_journey_mechanism.html">Mechanism journey</a>
+            <a href="ka_journey_theory.html">Theory journey</a>
+          </div>
+        </article>
+        <article class="showcase-card">
+          <h3>Journey surfaces</h3>
+          <p>Claude’s late-night prototype set for harder internal surfaces: evidence, topic inspection, and other reasoning-heavy pages.</p>
+          <div class="showcase-links">
+            <a href="ka_journeys.html">Journeys index</a>
+            <a href="ka_journey_evidence.html">Evidence landscape</a>
+            <a href="ka_journey_topic_inspector.html">Topic inspector</a>
+          </div>
+        </article>
+        <article class="showcase-card">
+          <h3>Topic variants</h3>
+          <p>These are alternative answers to the topic-browsing problem. They should be compared as interface experiments, not treated as settled doctrine.</p>
+          <div class="showcase-links">
+            <a href="ka_topic_facet_view.html">Facet</a>
+            <a href="ka_topic_heatmap_view.html">Heatmap</a>
+            <a href="ka_topic_quick_lookup_view.html">Lookup</a>
+            <a href="ka_topic_dashboard_view.html">Coordinated</a>
+            <a href="ka_topic_full_facets_view.html">Progressive</a>
+          </div>
+        </article>
       </div>
     </div>
 
@@ -849,7 +1031,7 @@
 <div id="login-overlay" style="display:none">
   <div class="login-modal">
     <h2>Log in to ATLAS</h2>
-    <p>Enter your UCSD email and course password to access your personalised workspace.</p>
+    <p>If you are a COGS 160 student, use your UCSD email and course password. If you are returning to saved contributor or instructor work, sign in here. Everyone else may browse publicly without signing in, and role choice is not permanent.</p>
     <div class="login-field">
       <label for="login-email">Email</label>
       <input type="email" id="login-email" placeholder="you@ucsd.edu" autocomplete="email" />
@@ -882,6 +1064,7 @@
 
   let currentUser = null;
   let currentRole = 'student_explorer';
+  let lastAuthSignature = '';
   function togglePwdVis(btn) {
     var inp = btn.parentElement.querySelector('input');
     if (inp.type === 'password') { inp.type = 'text'; btn.innerHTML = '&#128064;'; }
@@ -889,24 +1072,51 @@
   }
   let demoMode = false;
 
+  function authSignature() {
+    const token = localStorage.getItem('ka_access_token') || '';
+    const stored = localStorage.getItem('ka_current_user') || '';
+    return token && stored ? token.slice(0, 16) + '::' + stored : '';
+  }
+
+  function syncCompatAuthState(user, fallbackEmail) {
+    const auth = window.KA && window.KA.authState;
+    if (auth && typeof auth.primeFromUser === 'function') {
+      auth.primeFromUser(user || { email: fallbackEmail });
+      if (typeof auth.notify === 'function') auth.notify('user-home-login');
+      return;
+    }
+  }
+
+  function clearCanonicalAuthState() {
+    const auth = window.KA && window.KA.authState;
+    if (auth && typeof auth.clear === 'function') {
+      auth.clear();
+      if (typeof auth.notify === 'function') auth.notify('user-home-logout');
+      return;
+    }
+    localStorage.removeItem('ka_access_token');
+    localStorage.removeItem('ka_current_user');
+    localStorage.removeItem('ka_logged_in');
+  }
+
   function loadUser() {
+    currentUser = null;
     const token = localStorage.getItem('ka_access_token');
     const stored = localStorage.getItem('ka_current_user');
-    if (stored) {
+    if (token && stored) {
       try { currentUser = JSON.parse(stored); } catch (e) { currentUser = null; }
     }
-    if (!token && !stored) {
-      // Check URL param for role (for demo / exploration)
+    if (!token || !stored) {
       const params = new URLSearchParams(window.location.search);
       const urlRole = params.get('role');
       if (urlRole && window.KA_WORKFLOWS.roleMeta[urlRole]) {
         currentRole = urlRole;
-        demoMode = true;
       } else {
-        // Show login overlay
-        document.getElementById('login-overlay').style.display = 'flex';
-        demoMode = true; // default to demo so overlay can be dismissed
+        const savedRole = localStorage.getItem('ka_user_role');
+        currentRole = window.KA_WORKFLOWS.roleMeta[savedRole] ? savedRole : 'researcher';
       }
+      demoMode = true;
+      document.getElementById('login-overlay').style.display = 'none';
     } else {
       document.getElementById('login-overlay').style.display = 'none';
     }
@@ -948,6 +1158,17 @@
       document.getElementById('top-bar-role-badge').style.display = 'inline-block';
       document.getElementById('top-bar-logout').style.display = 'inline-block';
       document.getElementById('top-bar-login-btn').style.display = 'none';
+    } else {
+      const trackBadge = document.getElementById('top-bar-track-badge');
+      document.getElementById('top-bar-name').textContent = 'Public workspace';
+      document.getElementById('top-bar-role-badge').textContent = meta ? meta.label : '';
+      document.getElementById('top-bar-role-badge').style.display = 'inline-block';
+      document.getElementById('top-bar-logout').style.display = 'none';
+      document.getElementById('top-bar-login-btn').style.display = 'inline-block';
+      if (trackBadge) {
+        trackBadge.textContent = '';
+        trackBadge.style.display = 'none';
+      }
     }
   }
 
@@ -1415,6 +1636,7 @@
     document.getElementById('role-switcher-section').style.display = demoMode ? '' : 'none';
     document.getElementById('workflow-section-heading').style.display = (demoMode || isInstructor) ? '' : 'none';
     document.getElementById('workflow-grid').style.display = (demoMode || isInstructor) ? '' : 'none';
+    document.getElementById('public-portal-note').style.display = (!currentUser || demoMode) ? '' : 'none';
 
     // Update active state in role switcher
     document.querySelectorAll('.role-switch-btn').forEach(function (btn) {
@@ -1460,12 +1682,11 @@
         localStorage.setItem('ka_access_token', data.access_token);
         localStorage.setItem('ka_current_user', JSON.stringify(data.user));
         localStorage.setItem('ka_logged_in', '1');
+        syncCompatAuthState(data.user, email);
         currentUser = data.user;
         demoMode = false;  // Exit demo mode on successful login
         document.getElementById('login-overlay').style.display = 'none';
-        loadUser();
-        renderTopBar();
-        render(currentRole);
+        refreshAuthDrivenView(true);
       } catch (e) {
         // Auth server not reachable — offer demo mode
         showError('Auth server not reachable. Use demo mode to continue.');
@@ -1484,14 +1705,18 @@
       document.getElementById('login-overlay').style.display = 'flex';
     });
 
+    const publicSignInBtn = document.getElementById('public-sign-in-btn');
+    if (publicSignInBtn) {
+      publicSignInBtn.addEventListener('click', function () {
+        document.getElementById('login-overlay').style.display = 'flex';
+      });
+    }
+
     document.getElementById('top-bar-logout').addEventListener('click', function () {
-      localStorage.removeItem('ka_access_token');
-      localStorage.removeItem('ka_current_user');
-      localStorage.removeItem('ka_logged_in');
+      clearCanonicalAuthState();
       currentUser = null;
       demoMode = true;
-      renderTopBar();
-      render(currentRole);
+      refreshAuthDrivenView(true);
     });
 
     function showError(msg) {
@@ -1500,12 +1725,36 @@
     }
   }
 
-  /* ── Boot ────────────────────────────────────────────────────────────── */
-
-  function boot() {
+  function refreshAuthDrivenView(force) {
+    const signature = authSignature();
+    if (!force && signature === lastAuthSignature) return;
+    lastAuthSignature = signature;
     loadUser();
     renderTopBar();
     render(currentRole);
+  }
+
+  function bindAuthRefreshHooks() {
+    if (window.__kaUserHomeAuthHooksBound) return;
+    const refresh = function () { refreshAuthDrivenView(false); };
+    window.addEventListener('pageshow', refresh);
+    window.addEventListener('focus', refresh);
+    window.addEventListener('ka-auth-state-changed', refresh);
+    window.addEventListener('storage', function (event) {
+      const key = event && event.key;
+      if (!key || key === 'ka_access_token' || key === 'ka_current_user' || key === 'ka_logged_in') refresh();
+    });
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'visible') refresh();
+    });
+    window.__kaUserHomeAuthHooksBound = true;
+  }
+
+  /* ── Boot ────────────────────────────────────────────────────────────── */
+
+  function boot() {
+    bindAuthRefreshHooks();
+    refreshAuthDrivenView(true);
     initLogin();
     window.KA_COLLECTOR.init();
   }
